@@ -15,7 +15,8 @@ This platform solves this fundamental challenge for the **Gujarat Education Depa
 - **Backend**: **Node.js + Express** REST API.
 - **Database**: **MongoDB** with Mongoose ODM (includes zero-config auto-fallback to `mongodb-memory-server` if no local/remote MongoDB instance is configured).
 - **Security & Utilities**: HMAC-SHA256 signatures, 80G PDF/HTML tax certificate generator, and QR code ticket generation for paperless admission check-ins.
-- **Strict Constraints**: **React and JavaScript only. No Electron, No TypeScript.**
+- **Desktop Client**: **Electron** cross-platform desktop application with secure IPC context isolation, native menus, desktop notifications, and window lifecycle management.
+- **Strict Constraints**: **React, JavaScript, and Electron (No TypeScript).**
 
 ---
 
@@ -89,11 +90,21 @@ npm install
 
 ### Running Locally (Development Mode)
 ```bash
-# Starts both Express Backend (Port 5001) and Vite React Frontend (Port 5173) concurrently
+# Web Mode: Starts both Express Backend (Port 5001) and Vite React Frontend (Port 5173) concurrently
 npm run dev
 ```
 
 Visit **http://localhost:5173** in your browser.
+
+### 🖥️ Running as Electron Desktop App
+```bash
+# Electron Mode: Starts Express Backend, Vite Dev Server & Launches Electron Desktop App
+npm run electron
+```
+
+Additional Electron scripts:
+- `npm run electron:start` - Launches the Electron Desktop window directly (auto-detects dev server or spawns backend).
+- `npm run electron:build` - Compiles production bundle and launches Electron in standalone mode.
 
 ### Running Automated Test Suite
 ```bash

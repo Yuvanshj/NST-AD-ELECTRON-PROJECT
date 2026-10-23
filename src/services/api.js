@@ -3,7 +3,9 @@
  * Connects React Frontend with Node/Express & MongoDB Backend
  */
 
-const API_BASE = '/api';
+const API_BASE =
+  (typeof window !== 'undefined' && window.__API_BASE__) ||
+  (typeof window !== 'undefined' && window.location.protocol === 'file:' ? 'http://localhost:5001/api' : '/api');
 
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
