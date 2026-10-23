@@ -18,7 +18,7 @@ export default function EventsModule() {
   const [events, setEvents] = useState([]);
   const [myTickets, setMyTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState('upcoming'); // upcoming | tickets | scanner
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [checkInTicketNumber, setCheckInTicketNumber] = useState('');
   const [checkInResult, setCheckInResult] = useState(null);
@@ -82,6 +82,7 @@ export default function EventsModule() {
     if (!checkInTicketNumber.trim()) return;
 
     try {
+      // Find event associated with ticket if known, or test with first event
       const targetEventId = events[0]?._id;
       const res = await api.events.checkIn(targetEventId, checkInTicketNumber.trim(), currentUser._id);
       setCheckInResult({
@@ -120,18 +121,17 @@ export default function EventsModule() {
 
   return (
     <div className="page-wrapper animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <span>Campus Summits & Events</span>
-            <span className="badge badge-referral" style={{ fontSize: '0.8rem' }}>QR ADMISSION</span>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <Calendar color="#3b82f6" /> Events & QR Ticket Passes
           </h1>
-          <p style={{ marginTop: '0.5rem', fontSize: '1.05rem', maxWidth: '75ch' }}>
-            College convocations, departmental reunions, and state summits with verifiable paperless QR admission badges.
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            College convocations, departmental reunions, and tech summits with paperless QR badge check-in.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
           {isAdmin && (
             <button onClick={() => setShowCreateModal(true)} className="btn btn-primary" style={{ gap: '0.5rem' }}>
               <Plus size={16} /> Schedule Campus Event
@@ -141,7 +141,7 @@ export default function EventsModule() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2.5rem', borderBottom: '2px solid var(--border-color)', paddingBottom: '1rem' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
         <button
           onClick={() => setActiveTab('upcoming')}
           className={`btn ${activeTab === 'upcoming' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
@@ -164,13 +164,13 @@ export default function EventsModule() {
 
       {/* Tab: Upcoming Events */}
       {activeTab === 'upcoming' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
               Loading upcoming events...
             </div>
           ) : events.length === 0 ? (
-            <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)', gridColumn: '1 / -1' }}>
+            <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', gridColumn: '1 / -1' }}>
               No scheduled events found.
             </div>
           ) : (
@@ -185,35 +185,35 @@ export default function EventsModule() {
               const isRegistered = myTickets.some((t) => t.eventId?._id === ev._id);
 
               return (
-                <div key={ev._id} className="glass-panel interactive" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div key={ev._id} className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <span className="badge badge-referral">{ev.eventType}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>{ev.collegeId?.name}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <span className="badge badge-primary">{ev.eventType}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{ev.collegeId?.name}</span>
                     </div>
 
-                    <h3 style={{ fontSize: '1.35rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.75rem' }}>{ev.title}</h3>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem', minHeight: 45 }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '0.5rem' }}>{ev.title}</h3>
+                    <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '1.25rem', minHeight: 40 }}>
                       {ev.description}
                     </p>
 
-                    <div style={{ fontSize: '0.85rem', color: '#FAFAFA', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', padding: '1rem 0' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Clock size={15} color="var(--accent)" />
-                        <span style={{ textTransform: 'uppercase', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 600 }}>{dateStr}</span>
+                    <div style={{ fontSize: '0.8rem', color: '#cbd5e1', display: 'flex', flexDirection: 'column', gap: '0.35rem', marginBottom: '1.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <Clock size={14} color="#60a5fa" />
+                        <span>{dateStr}</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <MapPin size={15} color="var(--accent)" />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <MapPin size={14} color="#f59e0b" />
                         <span>{ev.location}</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Users size={15} color="#10b981" />
-                        <span style={{ fontWeight: 600 }}>{ev.attendeeCount || 0} / {ev.capacity} Confirmed Attendees</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <Users size={14} color="#34d399" />
+                        <span>{ev.attendeeCount || 0} / {ev.capacity} Confirmed Attendees</span>
                       </div>
                     </div>
                   </div>
 
-                  <div style={{ paddingTop: '0.5rem' }}>
+                  <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
                     {isRegistered ? (
                       <button
                         onClick={() => {
@@ -221,9 +221,9 @@ export default function EventsModule() {
                           setSelectedTicket(ticket);
                         }}
                         className="btn btn-secondary"
-                        style={{ width: '100%', gap: '0.5rem', borderColor: '#10b981', color: '#10b981' }}
+                        style={{ width: '100%', gap: '0.5rem', color: '#34d399' }}
                       >
-                        <CheckCircle2 size={16} color="#10b981" /> View QR Event Pass
+                        <CheckCircle2 size={16} color="#34d399" /> View QR Event Pass
                       </button>
                     ) : (
                       <button
@@ -244,9 +244,9 @@ export default function EventsModule() {
 
       {/* Tab: My Registered Tickets */}
       {activeTab === 'tickets' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
           {myTickets.length === 0 ? (
-            <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)', gridColumn: '1 / -1' }}>
+            <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', gridColumn: '1 / -1' }}>
               You have not registered for any events yet.
             </div>
           ) : (
@@ -255,23 +255,22 @@ export default function EventsModule() {
                 key={t._id}
                 className="glass-panel"
                 style={{
-                  padding: '2rem',
+                  padding: '1.5rem',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   textAlign: 'center',
-                  background: 'var(--bg-secondary)',
-                  border: '2px solid var(--accent)',
+                  background: 'linear-gradient(135deg, rgba(16, 25, 46, 0.9) 0%, rgba(30, 58, 138, 0.25) 100%)',
                 }}
               >
-                <div style={{ fontSize: '0.75rem', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800, marginBottom: '0.5rem' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>
                   Official Event Admission Pass
                 </div>
-                <h3 style={{ fontSize: '1.3rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '0.5rem' }}>
                   {t.eventId?.title || 'Campus Event'}
                 </h3>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '1.5rem' }}>
-                  Pass Holder: <strong style={{ color: '#FAFAFA' }}>{currentUser.name}</strong> ({currentUser.gtuEnrollment || 'GTU'})
+                <div style={{ fontSize: '0.85rem', color: '#93c5fd', marginBottom: '1rem' }}>
+                  Pass Holder: <strong>{currentUser.name}</strong> ({currentUser.gtuEnrollment || 'GTU'})
                 </div>
 
                 {t.qrCode ? (
@@ -279,16 +278,17 @@ export default function EventsModule() {
                     src={t.qrCode}
                     alt="Admission QR Pass"
                     style={{
-                      width: 180,
-                      height: 180,
-                      background: '#ffffff',
-                      padding: 10,
-                      border: '2px solid #000000',
-                      marginBottom: '1.25rem',
+                      width: 170,
+                      height: 170,
+                      borderRadius: 12,
+                      background: '#fff',
+                      padding: 8,
+                      marginBottom: '1rem',
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
                     }}
                   />
                 ) : (
-                  <div style={{ padding: '2rem', background: '#ffffff', color: '#000000', border: '2px solid #000000', marginBottom: '1.25rem', fontWeight: 900 }}>
+                  <div style={{ padding: '2rem', background: '#fff', color: '#000', borderRadius: 8, marginBottom: '1rem' }}>
                     [QR CODE]
                   </div>
                 )}
@@ -296,20 +296,18 @@ export default function EventsModule() {
                 <div
                   style={{
                     fontFamily: 'monospace',
-                    background: 'var(--bg-primary)',
-                    border: '1px solid var(--border-color)',
-                    padding: '0.5rem 1rem',
-                    fontSize: '0.95rem',
-                    fontWeight: 700,
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: 6,
+                    fontSize: '0.9rem',
                     letterSpacing: '0.08em',
-                    marginBottom: '1rem',
-                    color: 'var(--accent)',
+                    marginBottom: '0.75rem',
                   }}
                 >
                   {t.ticketNumber}
                 </div>
 
-                <div style={{ fontSize: '0.8rem', color: t.isCheckedIn ? '#10b981' : 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: '0.75rem', color: t.isCheckedIn ? '#34d399' : '#fbbf24', fontWeight: 600 }}>
                   {t.isCheckedIn ? '✓ CHECKED-IN AT ENTRANCE' : '● ADMISSION CONFIRMED'}
                 </div>
               </div>
@@ -320,11 +318,11 @@ export default function EventsModule() {
 
       {/* Tab: Organizer Scanner Simulation */}
       {activeTab === 'scanner' && (
-        <div className="glass-panel" style={{ maxWidth: 640, margin: '0 auto', padding: '2.5rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <Scan color="var(--accent)" /> Desk QR Scanner & Verification
+        <div className="glass-panel" style={{ maxWidth: 600, margin: '0 auto', padding: '2rem' }}>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Scan color="#3b82f6" /> Registration Desk Check-In Scanner
           </h2>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
             Campus event organizers scan attendee QR codes or enter the ticket number to verify alumni identities and record admissions in real time.
           </p>
 
@@ -337,12 +335,12 @@ export default function EventsModule() {
                 placeholder="Paste or scan ticket number..."
                 value={checkInTicketNumber}
                 onChange={(e) => setCheckInTicketNumber(e.target.value)}
-                style={{ fontFamily: 'monospace', fontSize: '1.05rem' }}
+                style={{ fontFamily: 'monospace', fontSize: '1rem' }}
                 required
               />
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.95rem' }}>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.8rem' }}>
               <CheckCircle2 size={18} /> Verify Admission & Check In
             </button>
           </form>
@@ -350,15 +348,13 @@ export default function EventsModule() {
           {checkInResult && (
             <div
               style={{
-                marginTop: '2rem',
-                padding: '1.25rem',
+                marginTop: '1.5rem',
+                padding: '1rem',
+                borderRadius: 8,
                 background: checkInResult.success ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                border: `2px solid ${checkInResult.success ? '#10b981' : '#ef4444'}`,
-                color: checkInResult.success ? '#10b981' : '#ef4444',
-                fontSize: '0.95rem',
-                fontFamily: 'Space Grotesk, sans-serif',
-                fontWeight: 700,
-                textTransform: 'uppercase',
+                border: `1px solid ${checkInResult.success ? '#10b981' : '#ef4444'}`,
+                color: checkInResult.success ? '#34d399' : '#f87171',
+                fontSize: '0.9rem',
               }}
             >
               {checkInResult.message}
@@ -371,8 +367,8 @@ export default function EventsModule() {
       {showCreateModal && (
         <div className="modal-overlay">
           <div className="modal-dialog">
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Schedule College Event</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.75rem' }}>
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Schedule College Event</h3>
+            <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
               Organize alumni chapter meets, hackathons, or workshops.
             </p>
 
@@ -389,7 +385,7 @@ export default function EventsModule() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Event Type</label>
                   <select
@@ -416,7 +412,7 @@ export default function EventsModule() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Date & Time</label>
                   <input
@@ -451,7 +447,7 @@ export default function EventsModule() {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                 <button type="button" onClick={() => setShowCreateModal(false)} className="btn btn-secondary">
                   Cancel
                 </button>
@@ -467,11 +463,11 @@ export default function EventsModule() {
       {/* Ticket QR Modal */}
       {selectedTicket && (
         <div className="modal-overlay">
-          <div className="modal-dialog" style={{ maxWidth: 440, textAlign: 'center' }}>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+          <div className="modal-dialog" style={{ maxWidth: 400, textAlign: 'center' }}>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>
               {selectedTicket.eventId?.title || 'Campus Event Pass'}
             </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
               Show this QR code at the campus security gate or registration desk.
             </p>
 
@@ -482,10 +478,10 @@ export default function EventsModule() {
                 style={{
                   width: 200,
                   height: 200,
-                  background: '#ffffff',
+                  background: '#fff',
                   padding: 10,
-                  border: '2px solid #000000',
-                  margin: '0 auto 1.5rem',
+                  borderRadius: 12,
+                  margin: '0 auto 1.25rem',
                 }}
               />
             )}
@@ -493,13 +489,11 @@ export default function EventsModule() {
             <div
               style={{
                 fontFamily: 'monospace',
-                fontSize: '1.05rem',
-                background: 'var(--bg-secondary)',
-                border: '2px solid var(--border-color)',
-                padding: '0.65rem',
-                marginBottom: '1.75rem',
-                color: 'var(--accent)',
-                fontWeight: 700,
+                fontSize: '1rem',
+                background: 'rgba(255, 255, 255, 0.08)',
+                padding: '0.5rem',
+                borderRadius: 8,
+                marginBottom: '1.5rem',
               }}
             >
               {selectedTicket.ticketNumber}

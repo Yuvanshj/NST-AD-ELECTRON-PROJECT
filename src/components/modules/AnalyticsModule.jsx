@@ -8,6 +8,8 @@ import {
   ShieldCheck,
   HeartHandshake,
   Compass,
+  Briefcase,
+  Award,
 } from 'lucide-react';
 
 export default function AnalyticsModule() {
@@ -41,19 +43,18 @@ export default function AnalyticsModule() {
 
   return (
     <div className="page-wrapper animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <span>State Institutional Analytics</span>
-            <span className="badge badge-referral" style={{ fontSize: '0.8rem' }}>LIVE KPIS</span>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <TrendingUp color="#3b82f6" /> State & College Institutional Analytics
           </h1>
-          <p style={{ marginTop: '0.5rem', fontSize: '1.05rem', maxWidth: '75ch' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
             Directorate of Technical Education, Govt. of Gujarat: Real-time alumni engagement, endowment growth, and placement affinity index.
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <Building2 size={18} color="var(--accent)" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Building2 size={16} color="var(--text-muted)" />
           <select
             className="form-select"
             value={selectedCollege}
@@ -70,43 +71,39 @@ export default function AnalyticsModule() {
         </div>
       </div>
 
-      {/* Primary KPI Metric Cards with Massive Scale */}
+      {/* Primary KPI Metric Cards */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="massive-bg-num">01</div>
           <div className="stat-label">Total Registered Alumni</div>
           <div className="stat-val">{stats?.totalAlumni || 1248}</div>
-          <div className="stat-trend" style={{ color: 'var(--accent)' }}>
+          <div className="stat-trend" style={{ color: '#34d399' }}>
             <Users size={14} /> +12.4% MoM State Growth
           </div>
         </div>
 
         <div className="stat-card">
-          <div className="massive-bg-num">02</div>
           <div className="stat-label">GTU Verification Rate</div>
-          <div className="stat-val" style={{ color: 'var(--accent)' }}>
+          <div className="stat-val" style={{ color: '#34d399' }}>
             {stats?.verificationRate || '94.5%'}
           </div>
-          <div className="stat-trend" style={{ color: '#10b981' }}>
+          <div className="stat-trend">
             <ShieldCheck size={14} /> High-trust Verified Registry
           </div>
         </div>
 
         <div className="stat-card">
-          <div className="massive-bg-num">03</div>
           <div className="stat-label">Total Endowment Raised</div>
-          <div className="stat-val" style={{ color: '#FAFAFA' }}>
+          <div className="stat-val" style={{ color: '#60a5fa' }}>
             ₹{stats?.totalDonationsAmount ? stats.totalDonationsAmount.toLocaleString() : '12,50,000'}
           </div>
           <div className="stat-trend">
-            <HeartHandshake size={14} color="var(--accent)" /> 100% 80G Certified Inflows
+            <HeartHandshake size={14} /> 100% 80G Certified Inflows
           </div>
         </div>
 
         <div className="stat-card">
-          <div className="massive-bg-num">04</div>
           <div className="stat-label">Active Mentorship Pairings</div>
-          <div className="stat-val" style={{ color: 'var(--accent)' }}>
+          <div className="stat-val" style={{ color: '#c084fc' }}>
             {stats?.activeMentorships || 128}
           </div>
           <div className="stat-trend">
@@ -116,15 +113,15 @@ export default function AnalyticsModule() {
       </div>
 
       {/* Multi-College Comparative Benchmark Table */}
-      <div className="glass-panel" style={{ marginBottom: '2.5rem', padding: 0 }}>
-        <div style={{ padding: '1.5rem 2rem', borderBottom: '2px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Building2 size={20} color="var(--accent)" />
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase' }}>
+      <div className="glass-panel" style={{ marginBottom: '2rem', overflow: 'hidden' }}>
+        <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Building2 size={18} color="#60a5fa" />
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
             Gujarat Technical Institutions Comparative Benchmarks
           </h3>
         </div>
 
-        <div className="table-container" style={{ border: 'none' }}>
+        <div className="table-container">
           <table className="data-table">
             <thead>
               <tr>
@@ -140,28 +137,28 @@ export default function AnalyticsModule() {
             <tbody>
               {comparisons.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
                     Loading college benchmarks...
                   </td>
                 </tr>
               ) : (
                 comparisons.map((col, idx) => (
                   <tr key={idx}>
-                    <td style={{ fontWeight: 800, textTransform: 'uppercase', color: '#FAFAFA' }}>{col.collegeName}</td>
+                    <td style={{ fontWeight: 600 }}>{col.collegeName}</td>
                     <td>
-                      <span style={{ fontFamily: 'monospace', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', padding: '0.25rem 0.6rem', color: 'var(--accent)', fontWeight: 700 }}>
+                      <span style={{ fontFamily: 'monospace', background: 'rgba(255,255,255,0.06)', padding: '0.2rem 0.5rem', borderRadius: 4 }}>
                         {col.code}
                       </span>
                     </td>
-                    <td style={{ textTransform: 'uppercase', color: 'var(--text-muted)' }}>{col.city}</td>
-                    <td style={{ fontWeight: 800, color: '#FAFAFA', fontFamily: 'Space Grotesk, sans-serif' }}>{col.alumniCount}</td>
+                    <td>{col.city}</td>
+                    <td style={{ fontWeight: 600 }}>{col.alumniCount}</td>
                     <td>
                       <span className="badge badge-verified">{col.verifiedRate}</span>
                     </td>
-                    <td style={{ fontWeight: 800, color: 'var(--accent)', fontFamily: 'Space Grotesk, sans-serif', fontSize: '1rem' }}>
+                    <td style={{ fontWeight: 700, color: '#34d399' }}>
                       ₹{col.donationsRaised.toLocaleString()}
                     </td>
-                    <td style={{ fontWeight: 700, color: '#FAFAFA', fontFamily: 'Space Grotesk, sans-serif' }}>{col.mentorCount}</td>
+                    <td style={{ fontWeight: 600, color: '#60a5fa' }}>{col.mentorCount}</td>
                   </tr>
                 ))
               )}
@@ -170,46 +167,46 @@ export default function AnalyticsModule() {
         </div>
       </div>
 
-      {/* Employment & Industry Distribution Visuals */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
-        <div className="glass-panel" style={{ padding: '2.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+      {/* Employment & Industry Distribution Chart Visual */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+        <div className="glass-panel" style={{ padding: '1.75rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>
             Top Industry Distribution of Gujarat Alumni
           </h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.75rem' }}>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
             Primary career sectors employing GTU and state engineering graduates.
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {[
-              { sector: 'Information Technology & Software', pct: 44, count: '549 Alumni' },
-              { sector: 'Semiconductor, Electronics & VLSI', pct: 21, count: '262 Alumni' },
-              { sector: 'Automotive & Heavy Manufacturing', pct: 18, count: '224 Alumni' },
-              { sector: 'Renewable Energy & Power Systems', pct: 11, count: '137 Alumni' },
-              { sector: 'Civil Governance & Public Sector', pct: 6, count: '75 Alumni' },
+              { sector: 'Information Technology & Software', pct: 44, count: '549 Alumni', color: '#3b82f6' },
+              { sector: 'Semiconductor, Electronics & VLSI', pct: 21, count: '262 Alumni', color: '#10b981' },
+              { sector: 'Automotive & Heavy Manufacturing', pct: 18, count: '224 Alumni', color: '#f59e0b' },
+              { sector: 'Renewable Energy & Power Systems', pct: 11, count: '137 Alumni', color: '#06b6d4' },
+              { sector: 'Civil Governance & Public Sector', pct: 6, count: '75 Alumni', color: '#8b5cf6' },
             ].map((item, i) => (
               <div key={i}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.45rem', textTransform: 'uppercase', fontFamily: 'Space Grotesk, sans-serif' }}>
-                  <span style={{ fontWeight: 700, color: '#FAFAFA' }}>{item.sector}</span>
-                  <span style={{ color: 'var(--accent)', fontWeight: 800 }}>{item.pct}% ({item.count})</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', marginBottom: '0.35rem' }}>
+                  <span style={{ fontWeight: 500 }}>{item.sector}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{item.pct}% ({item.count})</span>
                 </div>
-                <div style={{ height: 8, background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-                  <div style={{ width: `${item.pct}%`, height: '100%', background: 'var(--accent)' }} />
+                <div style={{ height: 6, background: 'rgba(255, 255, 255, 0.06)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ width: `${item.pct}%`, height: '100%', background: item.color, borderRadius: 3 }} />
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="glass-panel" style={{ padding: '2.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+        <div className="glass-panel" style={{ padding: '1.75rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem' }}>
             Top Employers of Gujarat Technical Graduates
           </h3>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.75rem' }}>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
             Companies with the highest concentration of active alumni mentors.
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {[
               { name: 'Tata Consultancy Services (TCS)', mentors: 64, city: 'Gandhinagar / Ahmedabad' },
               { name: 'L&T Technology Services', mentors: 42, city: 'Vadodara' },
@@ -223,16 +220,17 @@ export default function AnalyticsModule() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '1rem 1.25rem',
-                  background: 'var(--bg-secondary)',
-                  border: '2px solid var(--border-color)',
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  borderRadius: 8,
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: '#FAFAFA', fontFamily: 'Space Grotesk, sans-serif' }}>{company.name}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: 2 }}>{company.city}</div>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{company.name}</div>
+                  <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>{company.city}</div>
                 </div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase', fontFamily: 'Space Grotesk, sans-serif' }}>
+                <div style={{ fontSize: '0.8rem', color: '#60a5fa', fontWeight: 600 }}>
                   {company.mentors} Mentors
                 </div>
               </div>

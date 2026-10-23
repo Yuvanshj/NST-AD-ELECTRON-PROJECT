@@ -7,10 +7,12 @@ import {
   Building2,
   GraduationCap,
   Briefcase,
+  MapPin,
   CheckCircle2,
   Sparkles,
   UserPlus,
   MessageSquare,
+  Filter,
 } from 'lucide-react';
 
 export default function DirectoryModule({ onStartChat }) {
@@ -78,41 +80,23 @@ export default function DirectoryModule({ onStartChat }) {
 
   return (
     <div className="page-wrapper animate-fade-in">
-      {/* Page Title & Context */}
-      <div style={{ marginBottom: '2.5rem' }}>
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <span>State Alumni Directory</span>
-          <span className="badge badge-referral" style={{ fontSize: '0.8rem' }}>GTU VERIFIED</span>
-        </h1>
-        <p style={{ marginTop: '0.5rem', fontSize: '1.05rem', maxWidth: '75ch' }}>
-          Discover and connect across all state universities, polytechnics, and engineering faculties throughout Gujarat.
-        </p>
-      </div>
-
-      {/* Top Stats Cards with Massive Scale */}
+      {/* Top Stats */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="massive-bg-num">01</div>
           <div className="stat-label">Total Registered Alumni</div>
           <div className="stat-val">{stats?.totalAlumni || 1248}</div>
           <div className="stat-trend">Across Gujarat Technical Institutions</div>
         </div>
-
         <div className="stat-card">
-          <div className="massive-bg-num">02</div>
           <div className="stat-label">GTU Verified Records</div>
-          <div className="stat-val" style={{ color: 'var(--accent)' }}>
+          <div className="stat-val" style={{ color: '#34d399' }}>
             {stats?.verifiedAlumni || 1180}
           </div>
-          <div className="stat-trend" style={{ color: '#10b981' }}>
-            94.5% Identity Trust Score
-          </div>
+          <div className="stat-trend">94.5% Identity Trust Score</div>
         </div>
-
         <div className="stat-card">
-          <div className="massive-bg-num">03</div>
           <div className="stat-label">Active Alumni Mentors</div>
-          <div className="stat-val">
+          <div className="stat-val" style={{ color: '#60a5fa' }}>
             {stats?.activeMentors || 342}
           </div>
           <div className="stat-trend">Ready for Student Guidance</div>
@@ -120,26 +104,26 @@ export default function DirectoryModule({ onStartChat }) {
       </div>
 
       {/* Search & Filters */}
-      <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2.5rem' }}>
+      <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
         <form onSubmit={handleSearchSubmit}>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <div style={{ flex: '1 1 320px', position: 'relative' }}>
+            <div style={{ flex: '1 1 280px', position: 'relative' }}>
               <input
                 type="text"
                 className="form-input"
-                placeholder="Search by name, company, technical skill, or keyword..."
+                placeholder="Search alumni by name, company, technical skill, or keywords..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ paddingLeft: '2.8rem' }}
+                style={{ paddingLeft: '2.5rem' }}
               />
               <Search
-                size={18}
+                size={16}
                 color="var(--text-muted)"
-                style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }}
+                style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }}
               />
             </div>
 
-            <div style={{ flex: '0 1 220px' }}>
+            <div style={{ flex: '0 1 200px' }}>
               <select
                 className="form-select"
                 value={selectedCollege}
@@ -154,7 +138,7 @@ export default function DirectoryModule({ onStartChat }) {
               </select>
             </div>
 
-            <div style={{ flex: '0 1 200px' }}>
+            <div style={{ flex: '0 1 180px' }}>
               <select
                 className="form-select"
                 value={selectedBranch}
@@ -168,7 +152,7 @@ export default function DirectoryModule({ onStartChat }) {
               </select>
             </div>
 
-            <div style={{ flex: '0 1 150px' }}>
+            <div style={{ flex: '0 1 140px' }}>
               <select
                 className="form-select"
                 value={selectedBatch}
@@ -188,28 +172,22 @@ export default function DirectoryModule({ onStartChat }) {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.65rem',
+                gap: '0.5rem',
                 fontSize: '0.85rem',
                 cursor: 'pointer',
-                color: mentorOnly ? 'var(--accent)' : 'var(--text-muted)',
-                fontWeight: 700,
-                fontFamily: 'Space Grotesk, sans-serif',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-                userSelect: 'none',
+                color: mentorOnly ? '#60a5fa' : 'var(--text-muted)',
               }}
             >
               <input
                 type="checkbox"
                 checked={mentorOnly}
                 onChange={(e) => setMentorOnly(e.target.checked)}
-                style={{ width: 16, height: 16, accentColor: 'var(--accent)' }}
               />
               <Sparkles size={16} /> Mentors Only
             </label>
 
-            <button type="submit" className="btn btn-primary" style={{ padding: '0.85rem 1.85rem' }}>
-              Filter Directory
+            <button type="submit" className="btn btn-primary" style={{ padding: '0.65rem 1.25rem' }}>
+              Filter
             </button>
           </div>
         </form>
@@ -217,19 +195,19 @@ export default function DirectoryModule({ onStartChat }) {
 
       {/* Alumni Cards Grid */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)', fontFamily: 'Space Grotesk, sans-serif', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
           Searching Gujarat state alumni directory...
         </div>
       ) : alumni.length === 0 ? (
-        <div className="glass-panel" style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>
-          <Users size={48} style={{ margin: '0 auto 1.5rem', display: 'block', color: 'var(--accent)' }} />
-          <h2>No alumni matched your current filter criteria</h2>
-          <p style={{ fontSize: '0.95rem', marginTop: '0.75rem' }}>
+        <div className="glass-panel" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
+          <Users size={40} style={{ margin: '0 auto 1rem', display: 'block', opacity: 0.5 }} />
+          <h3>No alumni matched your current filter criteria</h3>
+          <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
             Try expanding your search query or selecting "All Institutions".
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
           {alumni.map((alumnus) => {
             const isUserVerified = alumnus.verificationStatus === 'VERIFIED';
             const profile = alumnus.profile || {};
@@ -238,9 +216,9 @@ export default function DirectoryModule({ onStartChat }) {
             return (
               <div
                 key={alumnus._id}
-                className="glass-panel interactive"
+                className="glass-panel"
                 style={{
-                  padding: '2rem',
+                  padding: '1.5rem',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -248,33 +226,31 @@ export default function DirectoryModule({ onStartChat }) {
                 }}
               >
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '0.85rem' }}>
                       <div
                         style={{
-                          width: 52,
-                          height: 52,
-                          background: 'var(--accent)',
-                          color: '#000000',
+                          width: 48,
+                          height: 48,
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #1e3a8a, #0d9488)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontWeight: 900,
-                          fontSize: '1.3rem',
-                          fontFamily: 'Space Grotesk, sans-serif',
-                          border: '2px solid #000000',
+                          fontWeight: 700,
+                          fontSize: '1.1rem',
                         }}
                       >
                         {alumnus.name?.charAt(0)}
                       </div>
                       <div>
-                        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.45rem', textTransform: 'uppercase' }}>
+                        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                           {alumnus.name}
                           {isUserVerified && (
-                            <CheckCircle2 size={16} color="#10b981" title="GTU Verified" />
+                            <CheckCircle2 size={15} color="#10b981" title="GTU Verified" />
                           )}
                         </h3>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', marginTop: 2 }}>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                           {profile.designation || 'Alumnus'} {profile.company && `@ ${profile.company}`}
                         </p>
                       </div>
@@ -287,13 +263,13 @@ export default function DirectoryModule({ onStartChat }) {
                     )}
                   </div>
 
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem', borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)', padding: '0.85rem 0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                      <Building2 size={15} color="var(--accent)" />
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
+                      <Building2 size={14} color="#60a5fa" />
                       <span>{alumnus.collegeId?.name || 'GTU Engineering College'}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <GraduationCap size={15} color="var(--text-main)" />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <GraduationCap size={14} color="#a78bfa" />
                       <span>
                         {alumnus.degree || 'B.E.'} • {alumnus.branch} (Class of {alumnus.batchYear})
                       </span>
@@ -301,25 +277,22 @@ export default function DirectoryModule({ onStartChat }) {
                   </div>
 
                   {profile.headline && (
-                    <p style={{ fontSize: '0.85rem', color: '#FAFAFA', marginBottom: '1.25rem', fontStyle: 'italic' }}>
+                    <p style={{ fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '1rem', fontStyle: 'italic' }}>
                       "{profile.headline}"
                     </p>
                   )}
 
                   {profile.skills && profile.skills.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '1.25rem' }}>
                       {profile.skills.slice(0, 4).map((sk, idx) => (
                         <span
                           key={idx}
                           style={{
-                            fontSize: '0.72rem',
-                            background: 'var(--bg-secondary)',
-                            border: '1px solid var(--border-color)',
-                            padding: '0.2rem 0.6rem',
-                            color: 'var(--text-main)',
-                            fontFamily: 'Space Grotesk, sans-serif',
-                            textTransform: 'uppercase',
-                            fontWeight: 600,
+                            fontSize: '0.7rem',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            padding: '0.15rem 0.5rem',
+                            borderRadius: 4,
+                            color: '#94a3b8',
                           }}
                         >
                           {sk}
@@ -329,7 +302,7 @@ export default function DirectoryModule({ onStartChat }) {
                   )}
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem', borderTop: '2px solid var(--border-color)', paddingTop: '1.25rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
                   <button
                     onClick={() => handleConnect(alumnus._id)}
                     className="btn btn-secondary btn-sm"

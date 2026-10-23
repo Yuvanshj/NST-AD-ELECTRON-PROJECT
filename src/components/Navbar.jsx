@@ -6,13 +6,17 @@ import {
   Bell,
   CheckCircle2,
   Clock,
+  ShieldCheck,
   Globe,
+  User,
   ChevronDown,
+  Building2,
+  GraduationCap,
 } from 'lucide-react';
 
 export default function Navbar() {
   const { currentUser, activePersona, switchPersona } = useAuth();
-  const { toggleLanguage, t } = useLanguage();
+  const { language, toggleLanguage, t } = useLanguage();
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -53,89 +57,83 @@ export default function Navbar() {
         left: 'var(--sidebar-width)',
         right: 0,
         height: 'var(--navbar-height)',
-        background: 'var(--bg-primary)',
-        borderBottom: '2px solid var(--border-color)',
+        background: 'rgba(10, 15, 29, 0.85)',
+        backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid var(--border-color)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 2.5rem',
+        padding: '0 2rem',
         zIndex: 100,
       }}
     >
       {/* Left: Department & University context */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <div
           style={{
-            background: 'var(--accent)',
-            width: 40,
-            height: 40,
+            background: 'linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%)',
+            width: 38,
+            height: 38,
+            borderRadius: 8,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontWeight: 900,
-            fontSize: '1.2rem',
-            color: '#000000',
-            border: '2px solid #000000',
-            fontFamily: 'Space Grotesk, sans-serif',
+            fontWeight: 800,
+            fontSize: '1rem',
+            color: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
           }}
         >
           મ
         </div>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <span
-              style={{
-                fontFamily: 'Space Grotesk, sans-serif',
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                color: '#FAFAFA',
-                letterSpacing: '-0.02em',
-                textTransform: 'uppercase',
-              }}
-            >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontWeight: 700, fontSize: '1rem', color: '#fff' }}>
               {t('portalName')}
             </span>
             <span
-              className="badge"
               style={{
-                borderColor: 'var(--accent)',
-                color: 'var(--accent)',
-                background: 'rgba(223, 225, 4, 0.1)',
                 fontSize: '0.65rem',
+                background: 'rgba(59, 130, 246, 0.15)',
+                color: '#60a5fa',
                 padding: '0.15rem 0.5rem',
+                borderRadius: 4,
+                border: '1px solid rgba(59, 130, 246, 0.3)',
               }}
             >
               GTU & GOG
             </span>
+            {typeof window !== 'undefined' && window.electronAPI?.isElectron && (
+              <span
+                title="Running inside MahaSetu Electron Desktop App"
+                style={{
+                  fontSize: '0.65rem',
+                  background: 'rgba(168, 85, 247, 0.18)',
+                  color: '#c084fc',
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: 4,
+                  border: '1px solid rgba(168, 85, 247, 0.4)',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                ⚡ Desktop
+              </span>
+            )}
           </div>
-          <p
-            style={{
-              fontSize: '0.72rem',
-              color: 'var(--text-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-              fontWeight: 500,
-            }}
-          >
+          <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
             {t('portalTagline')}
           </p>
         </div>
       </div>
 
       {/* Right: Controls, Role Switcher, Language & Profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         {/* Hackathon Role Simulator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <span
-            style={{
-              fontSize: '0.75rem',
-              color: 'var(--text-muted)',
-              fontWeight: 700,
-              fontFamily: 'Space Grotesk, sans-serif',
-              textTransform: 'uppercase',
-              letterSpacing: '0.04em',
-            }}
-          >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
             {t('switchRole')}:
           </span>
           <select
@@ -143,15 +141,12 @@ export default function Navbar() {
             value={activePersona}
             onChange={(e) => switchPersona(e.target.value)}
             style={{
-              padding: '0.45rem 0.85rem',
+              padding: '0.35rem 0.75rem',
               fontSize: '0.8rem',
               width: 'auto',
               cursor: 'pointer',
-              borderColor: 'var(--border-color)',
-              background: 'var(--bg-secondary)',
-              color: 'var(--text-main)',
-              fontFamily: 'Space Grotesk, sans-serif',
-              textTransform: 'uppercase',
+              borderColor: 'rgba(59, 130, 246, 0.4)',
+              background: '#131e38',
             }}
           >
             <option value="ALUMNI">Hardik Patel (Alumnus - TCS)</option>
@@ -167,7 +162,7 @@ export default function Navbar() {
           onClick={toggleLanguage}
           className="btn btn-secondary btn-sm"
           title="Switch language between English & Gujarati"
-          style={{ gap: '0.4rem' }}
+          style={{ gap: '0.35rem' }}
         >
           <Globe size={14} />
           <span>{t('langToggle')}</span>
@@ -178,26 +173,25 @@ export default function Navbar() {
           <button
             onClick={() => setShowNotifications(!showNotifications)}
             className="btn btn-secondary btn-sm"
-            style={{ position: 'relative', padding: '0.55rem' }}
-            aria-label="View notifications"
+            style={{ position: 'relative', padding: '0.45rem' }}
           >
             <Bell size={16} />
             {unreadCount > 0 && (
               <span
                 style={{
                   position: 'absolute',
-                  top: -6,
-                  right: -6,
+                  top: -4,
+                  right: -4,
                   background: '#ef4444',
-                  color: '#ffffff',
+                  color: '#fff',
                   fontSize: '0.65rem',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   width: 18,
                   height: 18,
+                  borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '1px solid #000000',
                 }}
               >
                 {unreadCount}
@@ -210,15 +204,15 @@ export default function Navbar() {
               className="glass-panel animate-fade-in"
               style={{
                 position: 'absolute',
-                top: 48,
+                top: 42,
                 right: 0,
-                width: 340,
+                width: 320,
                 maxHeight: 400,
                 overflowY: 'auto',
-                padding: '1.25rem',
+                padding: '1rem',
                 zIndex: 200,
-                background: 'var(--bg-primary)',
-                border: '2px solid var(--border-color)',
+                background: '#0d1527',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
               }}
             >
               <div
@@ -226,33 +220,21 @@ export default function Navbar() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '1rem',
-                  borderBottom: '2px solid var(--border-color)',
-                  paddingBottom: '0.65rem',
+                  marginBottom: '0.75rem',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '0.5rem',
                 }}
               >
-                <span
-                  style={{
-                    fontFamily: 'Space Grotesk, sans-serif',
-                    fontSize: '0.85rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                  }}
-                >
-                  System Notifications
-                </span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Notifications</span>
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllRead}
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: 'var(--accent)',
+                      color: 'var(--primary)',
                       fontSize: '0.75rem',
-                      fontWeight: 700,
                       cursor: 'pointer',
-                      textTransform: 'uppercase',
                     }}
                   >
                     Mark all read
@@ -260,7 +242,7 @@ export default function Navbar() {
                 )}
               </div>
               {notifications.length === 0 ? (
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', textTransform: 'uppercase' }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
                   No new notifications
                 </p>
               ) : (
@@ -268,17 +250,13 @@ export default function Navbar() {
                   <div
                     key={n._id}
                     style={{
-                      padding: '0.75rem 0.5rem',
-                      borderBottom: '1px solid var(--border-color)',
+                      padding: '0.6rem 0.5rem',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
                       opacity: n.isRead ? 0.6 : 1,
                     }}
                   >
-                    <div style={{ fontSize: '0.85rem', fontWeight: 700, textTransform: 'uppercase', color: '#FAFAFA' }}>
-                      {n.title}
-                    </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                      {n.message}
-                    </div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{n.title}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{n.message}</div>
                   </div>
                 ))
               )}
@@ -286,61 +264,44 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Current User Pill / Box */}
+        {/* Current User Pill */}
         {currentUser && (
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.75rem',
-              background: 'var(--bg-secondary)',
-              padding: '0.45rem 0.95rem',
-              border: '2px solid var(--border-color)',
+              gap: '0.65rem',
+              background: 'rgba(255, 255, 255, 0.05)',
+              padding: '0.35rem 0.8rem',
+              borderRadius: '9999px',
+              border: '1px solid var(--border-color)',
             }}
           >
             <div
               style={{
-                width: 32,
-                height: 32,
-                background: 'var(--accent)',
-                color: '#000000',
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                background: '#2563eb',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontWeight: 900,
-                fontSize: '0.85rem',
-                fontFamily: 'Space Grotesk, sans-serif',
+                fontWeight: 700,
+                fontSize: '0.75rem',
               }}
             >
               {currentUser.name?.charAt(0) || 'U'}
             </div>
             <div>
-              <div
-                style={{
-                  fontSize: '0.85rem',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.35rem',
-                  color: '#FAFAFA',
-                  fontFamily: 'Space Grotesk, sans-serif',
-                }}
-              >
-                <span>{currentUser.name}</span>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                {currentUser.name}
                 {currentUser.verificationStatus === 'VERIFIED' ? (
-                  <CheckCircle2 size={14} color="#10b981" title="GTU Verified" />
+                  <CheckCircle2 size={13} color="#10b981" title="GTU Verified" />
                 ) : (
-                  <Clock size={14} color="#f59e0b" title="Pending Verification" />
+                  <Clock size={13} color="#f59e0b" title="Pending Verification" />
                 )}
               </div>
-              <div
-                style={{
-                  fontSize: '0.68rem',
-                  color: 'var(--text-muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em',
-                }}
-              >
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
                 {currentUser.role} • {currentUser.collegeId?.code || 'GTU'}
               </div>
             </div>

@@ -84,8 +84,8 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         left: 0,
         bottom: 0,
         width: 'var(--sidebar-width)',
-        background: 'var(--bg-primary)',
-        borderRight: '2px solid var(--border-color)',
+        background: '#090e1c',
+        borderRight: '1px solid var(--border-color)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: 110,
@@ -99,71 +99,46 @@ export default function Sidebar({ activeTab, setActiveTab }) {
           display: 'flex',
           alignItems: 'center',
           padding: '0 1.5rem',
-          borderBottom: '2px solid var(--border-color)',
-          gap: '0.85rem',
+          borderBottom: '1px solid var(--border-color)',
+          gap: '0.75rem',
         }}
       >
         <div
           style={{
-            background: 'var(--accent)',
-            width: 36,
-            height: 36,
+            background: 'linear-gradient(135deg, #2563eb, #059669)',
+            width: 34,
+            height: 34,
+            borderRadius: 8,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#000000',
-            fontWeight: 900,
-            fontSize: '1rem',
-            fontFamily: 'Space Grotesk, sans-serif',
-            border: '2px solid #000000',
+            color: '#fff',
+            fontWeight: 800,
           }}
         >
           GS
         </div>
         <div>
-          <h2
-            style={{
-              fontSize: '1.2rem',
-              fontWeight: 800,
-              color: '#FAFAFA',
-              lineHeight: 1,
-              letterSpacing: '-0.03em',
-              textTransform: 'uppercase',
-              fontFamily: 'Space Grotesk, sans-serif',
-            }}
-          >
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', lineHeight: 1.1 }}>
             MahaSetu
           </h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: 3 }}>
-            <span style={{ width: 6, height: 6, background: 'var(--accent)', display: 'inline-block' }}></span>
-            <span
-              style={{
-                fontSize: '0.65rem',
-                color: 'var(--text-muted)',
-                fontWeight: 700,
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-              }}
-            >
-              GTU STATE NETWORK
-            </span>
-          </div>
+          <span style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: 600 }}>
+            GTU STATE NETWORK
+          </span>
         </div>
       </div>
 
       {/* Nav groups */}
-      <div style={{ flex: 1, padding: '1.25rem 0.75rem' }}>
+      <div style={{ flex: 1, padding: '1.25rem 0.85rem' }}>
         {navSections.map((section, idx) => (
-          <div key={idx} style={{ marginBottom: '1.5rem' }}>
+          <div key={idx} style={{ marginBottom: '1.25rem' }}>
             <div
               style={{
-                fontSize: '0.68rem',
+                fontSize: '0.65rem',
                 fontWeight: 700,
                 color: 'var(--text-dim)',
-                letterSpacing: '0.09em',
-                padding: '0 0.75rem 0.5rem',
-                textTransform: 'uppercase',
-                fontFamily: 'Space Grotesk, sans-serif',
+                letterSpacing: '0.08em',
+                padding: '0 0.75rem 0.4rem',
               }}
             >
               {section.heading}
@@ -180,25 +155,25 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '0.65rem 0.85rem',
-                    background: isActive ? 'var(--accent)' : 'transparent',
+                    padding: '0.55rem 0.75rem',
+                    borderRadius: 8,
+                    background: isActive
+                      ? 'linear-gradient(90deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.05) 100%)'
+                      : 'transparent',
                     border: 'none',
-                    borderLeft: isActive ? '4px solid #000000' : '4px solid transparent',
-                    color: isActive ? '#000000' : 'var(--text-muted)',
+                    borderLeft: isActive ? '3px solid #3b82f6' : '3px solid transparent',
+                    color: isActive ? '#fff' : 'var(--text-muted)',
                     fontSize: '0.825rem',
-                    fontWeight: isActive ? 700 : 600,
+                    fontWeight: isActive ? 600 : 500,
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.15s ease',
-                    marginBottom: 3,
-                    fontFamily: 'Space Grotesk, sans-serif',
-                    textTransform: 'uppercase',
-                    letterSpacing: '-0.01em',
+                    marginBottom: 2,
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.background = 'var(--bg-secondary)';
-                      e.currentTarget.style.color = 'var(--accent)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                      e.currentTarget.style.color = '#fff';
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -208,19 +183,19 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                     }
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <Icon size={16} color={isActive ? '#000000' : 'currentColor'} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <Icon size={16} color={isActive ? '#60a5fa' : 'currentColor'} />
                     <span>{item.label}</span>
                   </div>
                   {item.badge && (
                     <span
                       style={{
-                        fontSize: '0.625rem',
-                        padding: '0.15rem 0.45rem',
-                        background: isActive ? '#000000' : 'var(--border-color)',
-                        color: isActive ? 'var(--accent)' : '#FAFAFA',
-                        fontWeight: 800,
-                        letterSpacing: '0.04em',
+                        fontSize: '0.6rem',
+                        padding: '0.15rem 0.4rem',
+                        borderRadius: 4,
+                        background: '#3b82f6',
+                        color: '#fff',
+                        fontWeight: 700,
                       }}
                     >
                       {item.badge}
@@ -236,16 +211,12 @@ export default function Sidebar({ activeTab, setActiveTab }) {
       {/* Gujarat Dept Footer */}
       <div
         style={{
-          padding: '1.25rem 1rem',
-          borderTop: '2px solid var(--border-color)',
-          background: 'var(--bg-secondary)',
-          fontSize: '0.72rem',
-          color: 'var(--text-muted)',
+          padding: '1rem',
+          borderTop: '1px solid var(--border-color)',
+          background: 'rgba(0, 0, 0, 0.2)',
+          fontSize: '0.7rem',
+          color: 'var(--text-dim)',
           textAlign: 'center',
-          fontFamily: 'Space Grotesk, sans-serif',
-          textTransform: 'uppercase',
-          fontWeight: 700,
-          letterSpacing: '0.06em',
         }}
       >
         Govt of Gujarat • Higher Education

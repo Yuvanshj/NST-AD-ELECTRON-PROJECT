@@ -5,7 +5,10 @@ import {
   Sparkles,
   Award,
   Plus,
+  Building2,
+  GraduationCap,
   CheckCircle2,
+  Share2,
 } from 'lucide-react';
 
 export default function StoriesModule() {
@@ -59,14 +62,13 @@ export default function StoriesModule() {
 
   return (
     <div className="page-wrapper animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <span>Hall of Fame & Alumni Stories</span>
-            <span className="badge badge-referral" style={{ fontSize: '0.8rem' }}>SPOTLIGHTS</span>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <Sparkles color="#fbbf24" /> Alumni Hall of Fame & Success Stories
           </h1>
-          <p style={{ marginTop: '0.5rem', fontSize: '1.05rem', maxWidth: '75ch' }}>
-            Celebrating Gujarat state graduates excelling in deep tech innovation, civil governance, and global enterprise.
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            Inspiring the next generation: Celebrating Gujarat state graduates excelling in innovation, civil governance, and global enterprise.
           </p>
         </div>
 
@@ -78,14 +80,12 @@ export default function StoriesModule() {
       {successNotice && (
         <div
           style={{
-            background: 'var(--bg-secondary)',
-            border: '2px solid var(--accent)',
-            color: 'var(--accent)',
-            padding: '1.25rem 1.75rem',
-            marginBottom: '2rem',
-            fontFamily: 'Space Grotesk, sans-serif',
-            fontWeight: 800,
-            textTransform: 'uppercase',
+            background: 'rgba(16, 185, 129, 0.2)',
+            border: '1px solid rgba(16, 185, 129, 0.4)',
+            color: '#34d399',
+            padding: '0.85rem 1.25rem',
+            borderRadius: 8,
+            marginBottom: '1.5rem',
           }}
         >
           {successNotice}
@@ -94,61 +94,60 @@ export default function StoriesModule() {
 
       {/* Stories Grid */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+        <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
           Loading Gujarat alumni spotlights...
         </div>
       ) : stories.length === 0 ? (
-        <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+        <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
           No published spotlights yet. Be the first to submit a story!
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.75rem' }}>
           {stories.map((story) => (
             <div
               key={story._id}
-              className="glass-panel interactive"
+              className="glass-panel"
               style={{
-                padding: '2.25rem',
+                padding: '1.75rem',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
+                background: 'linear-gradient(135deg, rgba(16, 25, 46, 0.85) 0%, rgba(30, 41, 59, 0.6) 100%)',
               }}
             >
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <span className="badge badge-referral">{story.category}</span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <span className="badge badge-primary">{story.category}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     {story.collegeId?.name}
                   </span>
                 </div>
 
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.75rem', lineHeight: 1.25 }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem', lineHeight: 1.3 }}>
                   {story.title}
                 </h3>
 
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+                <p style={{ fontSize: '0.875rem', color: '#cbd5e1', marginBottom: '1.25rem', lineHeight: 1.5 }}>
                   {story.summary}
                 </p>
 
                 {story.metrics && (
                   <div
                     style={{
-                      background: 'var(--bg-secondary)',
-                      border: '2px solid var(--accent)',
-                      padding: '0.85rem 1.15rem',
-                      marginBottom: '1.5rem',
-                      fontSize: '0.85rem',
-                      color: 'var(--accent)',
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      border: '1px solid rgba(59, 130, 246, 0.25)',
+                      borderRadius: 8,
+                      padding: '0.65rem 1rem',
+                      marginBottom: '1.25rem',
+                      fontSize: '0.8rem',
+                      color: '#93c5fd',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.65rem',
-                      fontFamily: 'Space Grotesk, sans-serif',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
+                      gap: '0.5rem',
                     }}
                   >
-                    <Award size={18} color="var(--accent)" />
-                    <span>Impact Metric: {story.metrics}</span>
+                    <Award size={16} color="#60a5fa" />
+                    <strong>Impact Metric:</strong> {story.metrics}
                   </div>
                 )}
               </div>
@@ -157,34 +156,31 @@ export default function StoriesModule() {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '1rem',
-                  borderTop: '2px solid var(--border-color)',
-                  paddingTop: '1.25rem',
+                  gap: '0.75rem',
+                  borderTop: '1px solid var(--border-color)',
+                  paddingTop: '1rem',
                 }}
               >
                 <div
                   style={{
-                    width: 44,
-                    height: 44,
-                    background: 'var(--accent)',
-                    color: '#000000',
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    background: '#2563eb',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontWeight: 900,
-                    fontSize: '1.1rem',
-                    fontFamily: 'Space Grotesk, sans-serif',
-                    border: '2px solid #000000',
+                    fontWeight: 700,
                   }}
                 >
                   {story.alumniId?.name?.charAt(0) || 'A'}
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 800, textTransform: 'uppercase', color: '#FAFAFA', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <span>{story.alumniId?.name}</span>
-                    <CheckCircle2 size={14} color="#10b981" />
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    {story.alumniId?.name}
+                    <CheckCircle2 size={13} color="#10b981" />
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                     Class of {story.alumniId?.batchYear} • {story.alumniId?.branch}
                   </div>
                 </div>
@@ -198,8 +194,8 @@ export default function StoriesModule() {
       {showSubmitModal && (
         <div className="modal-overlay">
           <div className="modal-dialog">
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Submit Alumni Milestone</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.75rem' }}>
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Submit Alumni Milestone</h3>
+            <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
               Share your startup launch, patent grant, civil service qualification, or corporate leadership promotion.
             </p>
 
@@ -216,7 +212,7 @@ export default function StoriesModule() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Category</label>
                   <select
@@ -248,7 +244,7 @@ export default function StoriesModule() {
                 <textarea
                   className="form-textarea"
                   rows={2}
-                  placeholder="A concise snapshot of this journey..."
+                  placeholder="A concise 2-sentence snapshot of this journey..."
                   value={storyForm.summary}
                   onChange={(e) => setStoryForm({ ...storyForm, summary: e.target.value })}
                   required
@@ -267,7 +263,7 @@ export default function StoriesModule() {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                 <button type="button" onClick={() => setShowSubmitModal(false)} className="btn btn-secondary">
                   Cancel
                 </button>

@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { api } from '../../services/api.js';
 import {
+  User,
   ShieldCheck,
   Clock,
+  Briefcase,
   GraduationCap,
+  MapPin,
   Sparkles,
   Save,
   CheckCircle2,
@@ -81,38 +84,36 @@ export default function ProfileModule() {
       <div
         className="glass-panel"
         style={{
-          padding: '2.5rem',
-          marginBottom: '2.5rem',
+          padding: '2rem',
+          marginBottom: '2rem',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '2rem',
-          background: 'var(--bg-secondary)',
-          border: '2px solid var(--border-color)',
+          gap: '1.5rem',
+          background: 'linear-gradient(135deg, rgba(16, 25, 46, 0.9) 0%, rgba(30, 58, 138, 0.25) 100%)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <div
             style={{
-              width: 88,
-              height: 88,
-              background: 'var(--accent)',
-              color: '#000000',
+              width: 80,
+              height: 80,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '2.5rem',
-              fontWeight: 900,
-              fontFamily: 'Space Grotesk, sans-serif',
-              border: '2px solid #000000',
+              fontSize: '2rem',
+              fontWeight: 800,
+              boxShadow: '0 8px 24px rgba(59, 130, 246, 0.4)',
             }}
           >
             {currentUser.name?.charAt(0) || 'U'}
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.4rem', flexWrap: 'wrap' }}>
-              <h1 style={{ fontSize: '2.2rem', fontWeight: 800, textTransform: 'uppercase' }}>{currentUser.name}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
+              <h1 style={{ fontSize: '1.75rem', fontWeight: 700 }}>{currentUser.name}</h1>
               {isVerified ? (
                 <span className="badge badge-verified">
                   <ShieldCheck size={14} /> GTU Verified Alumnus
@@ -123,13 +124,13 @@ export default function ProfileModule() {
                 </span>
               )}
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', textTransform: 'uppercase', fontFamily: 'Space Grotesk, sans-serif' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
               {currentUser.email} • {currentUser.role}
             </p>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <GraduationCap size={15} color="var(--accent)" />
-                GTU Enrollment: <strong style={{ color: '#FAFAFA' }}>{currentUser.gtuEnrollment || 'N/A'}</strong>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', fontSize: '0.8rem', color: '#94a3b8' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <GraduationCap size={14} color="#60a5fa" />
+                GTU Enrollment: <strong>{currentUser.gtuEnrollment || 'N/A'}</strong>
               </span>
               <span>•</span>
               <span>Batch {currentUser.batchYear || 'N/A'}</span>
@@ -142,20 +143,21 @@ export default function ProfileModule() {
         {/* Institution Stamp */}
         <div
           style={{
-            background: 'var(--bg-primary)',
-            border: '2px solid var(--border-color)',
-            padding: '1.25rem 1.75rem',
+            background: 'rgba(255, 255, 255, 0.04)',
+            border: '1px solid var(--border-color)',
+            borderRadius: 12,
+            padding: '1rem 1.5rem',
             textAlign: 'right',
           }}
         >
-          <div style={{ fontSize: '0.7rem', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800 }}>
+          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
             Affiliated Institute
           </div>
-          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#FAFAFA', textTransform: 'uppercase', marginTop: 2 }}>
+          <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#f8fafc' }}>
             {currentUser.collegeId?.name || 'L.D. College of Engineering'}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: 4 }}>
-            Gujarat Technological University (GTU)
+          <div style={{ fontSize: '0.75rem', color: '#38bdf8' }}>
+            Affiliated to Gujarat Technological University (GTU)
           </div>
         </div>
       </div>
@@ -163,31 +165,29 @@ export default function ProfileModule() {
       {successMsg && (
         <div
           style={{
-            background: 'var(--bg-secondary)',
-            border: '2px solid var(--accent)',
-            color: 'var(--accent)',
-            padding: '1rem 1.5rem',
-            marginBottom: '2rem',
+            background: 'rgba(16, 185, 129, 0.2)',
+            border: '1px solid rgba(16, 185, 129, 0.4)',
+            color: '#34d399',
+            padding: '0.75rem 1.25rem',
+            borderRadius: 8,
+            marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
-            fontFamily: 'Space Grotesk, sans-serif',
-            fontWeight: 800,
-            textTransform: 'uppercase',
           }}
         >
-          <CheckCircle2 size={18} /> {successMsg}
+          <CheckCircle2 size={16} /> {successMsg}
         </div>
       )}
 
       {/* Main Profile Edit Form */}
-      <div className="glass-panel" style={{ padding: '2.5rem' }}>
-        <h3 style={{ fontSize: '1.35rem', marginBottom: '2rem', fontWeight: 800, textTransform: 'uppercase' }}>
+      <div className="glass-panel" style={{ padding: '2rem' }}>
+        <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', fontWeight: 600 }}>
           Professional Background & Mentorship Status
         </h3>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
             <div className="form-group">
               <label className="form-label">Professional Headline</label>
               <input
@@ -277,7 +277,7 @@ export default function ProfileModule() {
             </div>
           </div>
 
-          <div className="form-group" style={{ marginTop: '0.75rem' }}>
+          <div className="form-group" style={{ marginTop: '0.5rem' }}>
             <label className="form-label">Bio & College Experience</label>
             <textarea
               className="form-textarea"
@@ -291,43 +291,59 @@ export default function ProfileModule() {
           {/* Mentorship Toggle */}
           <div
             style={{
-              background: 'var(--bg-secondary)',
-              border: '2px solid var(--border-color)',
-              padding: '1.5rem',
+              background: 'rgba(59, 130, 246, 0.08)',
+              border: '1px solid rgba(59, 130, 246, 0.25)',
+              borderRadius: 10,
+              padding: '1.25rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: '2rem',
+              marginBottom: '1.75rem',
             }}
           >
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontWeight: 800, textTransform: 'uppercase', fontFamily: 'Space Grotesk, sans-serif' }}>
-                <Sparkles size={20} color="var(--accent)" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+                <Sparkles size={18} color="#60a5fa" />
                 Available to Mentor GTU Students
               </div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
                 When enabled, your profile will appear with a high match score for students seeking guidance in {currentUser.branch || 'your branch'}.
               </p>
             </div>
-            <label
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                cursor: 'pointer',
-                fontFamily: 'Space Grotesk, sans-serif',
-                fontWeight: 800,
-                textTransform: 'uppercase',
-                color: formData.isMentorAvailable ? 'var(--accent)' : 'var(--text-muted)',
-              }}
-            >
+            <label style={{ position: 'relative', display: 'inline-block', width: 48, height: 26 }}>
               <input
                 type="checkbox"
                 checked={formData.isMentorAvailable}
                 onChange={(e) => setFormData({ ...formData, isMentorAvailable: e.target.checked })}
-                style={{ width: 20, height: 20, accentColor: 'var(--accent)' }}
+                style={{ opacity: 0, width: 0, height: 0 }}
               />
-              <span>{formData.isMentorAvailable ? 'ACTIVE' : 'INACTIVE'}</span>
+              <span
+                style={{
+                  position: 'absolute',
+                  cursor: 'pointer',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: formData.isMentorAvailable ? '#2563eb' : '#334155',
+                  borderRadius: 34,
+                  transition: '0.2s',
+                }}
+              >
+                <span
+                  style={{
+                    position: 'absolute',
+                    content: '',
+                    height: 20,
+                    width: 20,
+                    left: formData.isMentorAvailable ? 24 : 3,
+                    bottom: 3,
+                    backgroundColor: 'white',
+                    borderRadius: '50%',
+                    transition: '0.2s',
+                  }}
+                />
+              </span>
             </label>
           </div>
 
