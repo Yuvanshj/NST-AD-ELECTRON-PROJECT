@@ -1,0 +1,46 @@
+{
+  "name": "alumni-association-platform",
+  "version": "1.0.0",
+  "description": "Gujarat Education Department - Multi-College Alumni Platform in React, Node.js & MongoDB",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"npm run server\" \"npm run client\"",
+    "server": "node server/index.js",
+    "client": "vite",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yuvanshj/NST-AD-ELECTRON-PROJECT.git"
+  },
+  "keywords": [
+    "react",
+    "javascript",
+    "mongodb",
+    "mongoose",
+    "express",
+    "alumni",
+    "gujarat-education"
+  ],
+  "author": "Antigravity Pair",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "lucide-react": "^1.16.0",
+    "mongodb-memory-server": "^11.3.0",
+    "mongoose": "^8.9.5",
+    "qrcode": "^1.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "vite": "^6.1.0",
+    "vitest": "^3.0.5"
+  }
+}
