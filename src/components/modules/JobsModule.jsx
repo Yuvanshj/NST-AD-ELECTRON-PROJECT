@@ -4,14 +4,9 @@ import { api } from '../../services/api.js';
 import {
   Briefcase,
   MapPin,
-  Building2,
-  DollarSign,
-  Clock,
   Sparkles,
   Plus,
   Send,
-  CheckCircle2,
-  Share2,
 } from 'lucide-react';
 
 export default function JobsModule() {
@@ -20,12 +15,11 @@ export default function JobsModule() {
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showPostModal, setShowPostModal] = useState(false);
-  const [showApplyModal, setShowApplyModal] = useState(null); // job to apply to
+  const [showApplyModal, setShowApplyModal] = useState(null);
   const [referralOnly, setReferralOnly] = useState(false);
   const [applyForm, setApplyForm] = useState({ resumeUrl: '', coverLetter: '', requestReferral: true });
   const [applySuccess, setApplySuccess] = useState('');
 
-  // Post Job form state
   const [jobForm, setJobForm] = useState({
     title: '',
     company: '',
@@ -114,31 +108,38 @@ export default function JobsModule() {
 
   return (
     <div className="page-wrapper animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1.5rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <Briefcase color="#3b82f6" /> Referral-Driven Careers & Jobs
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <span>Careers & Internal Referrals</span>
+            <span className="badge badge-referral" style={{ fontSize: '0.8rem' }}>GTU PIPELINE</span>
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Exclusive openings shared by GTU alumni. Request internal referrals to fast-track hiring pipelines.
+          <p style={{ marginTop: '0.5rem', fontSize: '1.05rem', maxWidth: '75ch' }}>
+            Exclusive openings shared by GTU alumni. Request verified internal employee referrals to accelerate hiring.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
           <label
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
+              gap: '0.65rem',
               fontSize: '0.85rem',
               cursor: 'pointer',
-              color: referralOnly ? '#c084fc' : 'var(--text-muted)',
+              color: referralOnly ? 'var(--accent)' : 'var(--text-muted)',
+              fontFamily: 'Space Grotesk, sans-serif',
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              userSelect: 'none',
             }}
           >
             <input
               type="checkbox"
               checked={referralOnly}
               onChange={(e) => setReferralOnly(e.target.checked)}
+              style={{ width: 16, height: 16, accentColor: 'var(--accent)' }}
             />
             <Sparkles size={16} /> Alumni Referral Only
           </label>
@@ -152,12 +153,15 @@ export default function JobsModule() {
       {applySuccess && (
         <div
           style={{
-            background: 'rgba(16, 185, 129, 0.2)',
-            border: '1px solid rgba(16, 185, 129, 0.4)',
-            color: '#34d399',
-            padding: '0.85rem 1.25rem',
-            borderRadius: 8,
-            marginBottom: '1.5rem',
+            background: 'rgba(223, 225, 4, 0.12)',
+            border: '2px solid var(--accent)',
+            color: 'var(--accent)',
+            padding: '1.25rem 1.75rem',
+            marginBottom: '2rem',
+            fontFamily: 'Space Grotesk, sans-serif',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.03em',
           }}
         >
           {applySuccess}
@@ -165,15 +169,15 @@ export default function JobsModule() {
       )}
 
       {/* Main Split Layout: Job List & Detail View */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(340px, 1fr) minmax(400px, 1.4fr)', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(340px, 1fr) minmax(420px, 1.4fr)', gap: '1.75rem' }}>
         {/* Left: Job Cards List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               Loading job board...
             </div>
           ) : jobs.length === 0 ? (
-            <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
               No openings posted yet. Be the first alumnus to post a job!
             </div>
           ) : (
@@ -183,43 +187,44 @@ export default function JobsModule() {
                 <div
                   key={job._id}
                   onClick={() => setSelectedJob(job)}
-                  className="glass-panel"
+                  className="glass-panel interactive"
                   style={{
-                    padding: '1.25rem',
+                    padding: '1.75rem',
                     cursor: 'pointer',
-                    border: isSelected ? '1px solid #3b82f6' : '1px solid var(--border-color)',
-                    background: isSelected ? 'rgba(59, 130, 246, 0.12)' : 'var(--bg-card)',
-                    transition: 'all 0.15s ease',
+                    borderColor: isSelected ? 'var(--accent)' : 'var(--border-color)',
+                    background: isSelected ? '#141419' : 'var(--bg-card)',
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
                     <div>
-                      <h3 style={{ fontSize: '1.05rem', fontWeight: 700 }}>{job.title}</h3>
-                      <div style={{ fontSize: '0.85rem', color: '#93c5fd', fontWeight: 600 }}>{job.company}</div>
+                      <h3 style={{ fontSize: '1.15rem', fontWeight: 800, textTransform: 'uppercase' }}>{job.title}</h3>
+                      <div style={{ fontSize: '0.9rem', color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', marginTop: 2 }}>
+                        {job.company}
+                      </div>
                     </div>
                     {job.isReferralAvailable && (
                       <span className="badge badge-referral" title="Alumni referral available">
-                        <Sparkles size={12} /> REFERRAL AVAILABLE
+                        <Sparkles size={12} /> REFERRAL
                       </span>
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <MapPin size={13} /> {job.location}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.85rem', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem', textTransform: 'uppercase', fontFamily: 'Space Grotesk, sans-serif' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <MapPin size={14} color="var(--accent)" /> {job.location}
                     </span>
                     <span>•</span>
                     <span>{job.jobType.replace('_', ' ')}</span>
                     {job.salaryRange && (
                       <>
                         <span>•</span>
-                        <span style={{ color: '#34d399', fontWeight: 600 }}>{job.salaryRange}</span>
+                        <span style={{ color: '#FAFAFA', fontWeight: 700 }}>{job.salaryRange}</span>
                       </>
                     )}
                   </div>
 
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    Posted by <strong style={{ color: '#cbd5e1' }}>{job.postedBy?.name || 'Alumnus'}</strong> ({job.postedBy?.collegeId?.code || 'GTU'})
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', borderTop: '1px solid var(--border-color)', paddingTop: '0.75rem', textTransform: 'uppercase' }}>
+                    Posted by <strong style={{ color: '#FAFAFA' }}>{job.postedBy?.name || 'Alumnus'}</strong> ({job.postedBy?.collegeId?.code || 'GTU'})
                   </div>
                 </div>
               );
@@ -230,24 +235,24 @@ export default function JobsModule() {
         {/* Right: Selected Job Details */}
         <div>
           {selectedJob ? (
-            <div className="glass-panel" style={{ padding: '2rem', position: 'sticky', top: 'calc(var(--navbar-height) + 1rem)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div className="glass-panel" style={{ padding: '2.5rem', position: 'sticky', top: 'calc(var(--navbar-height) + 2rem)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1.25rem' }}>
                 <div>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>{selectedJob.title}</h2>
-                  <div style={{ fontSize: '1.1rem', color: '#60a5fa', fontWeight: 600 }}>{selectedJob.company}</div>
-                  <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    <span><MapPin size={14} style={{ display: 'inline', marginRight: 4 }} />{selectedJob.location}</span>
+                  <h2 style={{ fontSize: '1.85rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.4rem' }}>{selectedJob.title}</h2>
+                  <div style={{ fontSize: '1.2rem', color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase' }}>{selectedJob.company}</div>
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                    <span><MapPin size={14} style={{ display: 'inline', marginRight: 4, color: 'var(--accent)' }} />{selectedJob.location}</span>
                     <span>•</span>
                     <span>{selectedJob.jobType}</span>
                     <span>•</span>
-                    <span style={{ color: '#34d399', fontWeight: 600 }}>{selectedJob.salaryRange || 'Competitive'}</span>
+                    <span style={{ color: '#FAFAFA', fontWeight: 700 }}>{selectedJob.salaryRange || 'Competitive'}</span>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setShowApplyModal(selectedJob)}
                   className="btn btn-primary"
-                  style={{ gap: '0.5rem', padding: '0.75rem 1.5rem' }}
+                  style={{ gap: '0.5rem', padding: '0.85rem 1.85rem' }}
                 >
                   <Send size={16} /> Request Referral & Apply
                 </button>
@@ -256,40 +261,39 @@ export default function JobsModule() {
               {selectedJob.isReferralAvailable && (
                 <div
                   style={{
-                    background: 'rgba(139, 92, 246, 0.12)',
-                    border: '1px solid rgba(139, 92, 246, 0.3)',
-                    borderRadius: 10,
-                    padding: '1rem 1.25rem',
-                    marginBottom: '1.5rem',
+                    background: 'var(--bg-secondary)',
+                    border: '2px solid var(--accent)',
+                    padding: '1.25rem 1.5rem',
+                    marginBottom: '2rem',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.75rem',
+                    gap: '1rem',
                   }}
                 >
-                  <Sparkles color="#c084fc" size={24} />
+                  <Sparkles color="var(--accent)" size={24} />
                   <div>
-                    <div style={{ fontWeight: 600, color: '#e9d5ff', fontSize: '0.9rem' }}>
+                    <div style={{ fontWeight: 800, color: '#FAFAFA', fontSize: '0.95rem', textTransform: 'uppercase', fontFamily: 'Space Grotesk, sans-serif' }}>
                       Internal Alumni Referral Supported
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: '#c4b5fd' }}>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 2 }}>
                       {selectedJob.postedBy?.name} has pledged to review profiles of GTU graduates and submit their credentials through their company's internal employee referral portal.
                     </div>
                   </div>
                 </div>
               )}
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   Role Overview & Responsibilities
                 </h4>
-                <p style={{ fontSize: '0.9rem', color: '#cbd5e1', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+                <p style={{ fontSize: '0.95rem', color: '#FAFAFA', lineHeight: 1.7, whiteSpace: 'pre-line' }}>
                   {selectedJob.description}
                 </p>
               </div>
 
               {selectedJob.skillsRequired && selectedJob.skillsRequired.length > 0 && (
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                     Required Technical Skills
                   </h4>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -297,12 +301,14 @@ export default function JobsModule() {
                       <span
                         key={i}
                         style={{
-                          background: 'rgba(255, 255, 255, 0.06)',
+                          background: 'var(--bg-secondary)',
                           border: '1px solid var(--border-color)',
-                          padding: '0.3rem 0.75rem',
-                          borderRadius: 6,
+                          padding: '0.4rem 0.85rem',
                           fontSize: '0.8rem',
-                          color: '#f8fafc',
+                          color: '#FAFAFA',
+                          fontFamily: 'Space Grotesk, sans-serif',
+                          textTransform: 'uppercase',
+                          fontWeight: 700,
                         }}
                       >
                         {skill}
@@ -313,7 +319,7 @@ export default function JobsModule() {
               )}
             </div>
           ) : (
-            <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <div className="glass-panel" style={{ padding: '5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
               Select a job listing to view complete requirements and request an internal referral.
             </div>
           )}
@@ -324,11 +330,11 @@ export default function JobsModule() {
       {showApplyModal && (
         <div className="modal-overlay">
           <div className="modal-dialog">
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
               Apply & Request Referral: {showApplyModal.title}
             </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-              Your application goes directly to <strong>{showApplyModal.postedBy?.name || 'the posting alumnus'}</strong>.
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.75rem' }}>
+              Your application goes directly to <strong style={{ color: 'var(--accent)' }}>{showApplyModal.postedBy?.name || 'the posting alumnus'}</strong>.
             </p>
 
             <form onSubmit={handleApply}>
@@ -356,7 +362,7 @@ export default function JobsModule() {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="button" onClick={() => setShowApplyModal(null)} className="btn btn-secondary">
                   Cancel
                 </button>
@@ -372,14 +378,14 @@ export default function JobsModule() {
       {/* Post Job Modal */}
       {showPostModal && (
         <div className="modal-overlay">
-          <div className="modal-dialog" style={{ maxWidth: 650 }}>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Post Job & Provide Alumni Referral</h3>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+          <div className="modal-dialog" style={{ maxWidth: 700 }}>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Post Job & Provide Alumni Referral</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.75rem' }}>
               Help your college juniors and fellow GTU alumni break into top tech and engineering companies.
             </p>
 
             <form onSubmit={handleCreateJob}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
                 <div className="form-group">
                   <label className="form-label">Job Title</label>
                   <input
@@ -404,7 +410,7 @@ export default function JobsModule() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
                 <div className="form-group">
                   <label className="form-label">Job Location</label>
                   <input
@@ -451,7 +457,7 @@ export default function JobsModule() {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="button" onClick={() => setShowPostModal(false)} className="btn btn-secondary">
                   Cancel
                 </button>
