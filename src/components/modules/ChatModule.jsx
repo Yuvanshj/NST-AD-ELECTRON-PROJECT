@@ -87,7 +87,7 @@ export default function ChatModule({ initialRecipient }) {
   };
 
   return (
-    <div className="page-wrapper animate-fade-in" style={{ height: 'calc(100vh - var(--navbar-height) - 4rem)' }}>
+    <div className="page-wrapper animate-fade-in" style={{ height: 'calc(100vh - var(--navbar-height) - 40px - 5rem)', paddingBottom: 0 }}>
       <div
         className="glass-panel"
         style={{
