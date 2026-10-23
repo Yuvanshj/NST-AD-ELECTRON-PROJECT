@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { api } from '../../services/api.js';
-import { MessageSquare, Send, CheckCircle2, User, Search } from 'lucide-react';
+import { MessageSquare, Send, CheckCircle2 } from 'lucide-react';
 
 export default function ChatModule({ initialRecipient }) {
   const { currentUser } = useAuth();
@@ -9,7 +9,6 @@ export default function ChatModule({ initialRecipient }) {
   const [activePartner, setActivePartner] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -45,8 +44,6 @@ export default function ChatModule({ initialRecipient }) {
       }
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -68,7 +65,6 @@ export default function ChatModule({ initialRecipient }) {
     const content = newMessage.trim();
     setNewMessage('');
 
-    // Optimistic UI update
     const tempMsg = {
       _id: 'temp-' + Date.now(),
       senderId: { _id: currentUser._id, name: currentUser.name },
@@ -98,27 +94,27 @@ export default function ChatModule({ initialRecipient }) {
           display: 'flex',
           height: '100%',
           overflow: 'hidden',
-          borderRadius: 16,
+          padding: 0,
         }}
       >
         {/* Left Sidebar: Conversations */}
         <div
           style={{
-            width: 320,
-            borderRight: '1px solid var(--border-color)',
+            width: 340,
+            borderRight: '2px solid var(--border-color)',
             display: 'flex',
             flexDirection: 'column',
-            background: 'rgba(15, 23, 42, 0.4)',
+            background: 'var(--bg-primary)',
           }}
         >
-          <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--border-color)' }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.25rem' }}>Direct Messages</h2>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>GTU Verified Alumni & Student Network</p>
+          <div style={{ padding: '1.5rem', borderBottom: '2px solid var(--border-color)' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.25rem' }}>Direct Messages</h2>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>GTU Verified Network</p>
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {conversations.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase' }}>
                 No active conversations yet. Visit the Alumni Directory to initiate conversations!
               </div>
             ) : (
@@ -130,44 +126,47 @@ export default function ChatModule({ initialRecipient }) {
                     key={idx}
                     onClick={() => setActivePartner(partner)}
                     style={{
-                      padding: '0.85rem 1.25rem',
+                      padding: '1rem 1.25rem',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.75rem',
+                      gap: '0.85rem',
                       cursor: 'pointer',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
-                      background: isSelected ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                      borderLeft: isSelected ? '3px solid #3b82f6' : '3px solid transparent',
+                      borderBottom: '1px solid var(--border-color)',
+                      background: isSelected ? 'var(--accent)' : 'transparent',
+                      borderLeft: isSelected ? '4px solid #000000' : '4px solid transparent',
                       transition: 'all 0.15s ease',
                     }}
                   >
                     <div
                       style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: '50%',
-                        background: '#1d4ed8',
+                        width: 42,
+                        height: 42,
+                        background: isSelected ? '#000000' : 'var(--bg-secondary)',
+                        color: isSelected ? 'var(--accent)' : '#FAFAFA',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontWeight: 700,
-                        fontSize: '0.9rem',
+                        fontWeight: 900,
+                        fontSize: '1rem',
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        border: '2px solid',
+                        borderColor: isSelected ? '#000000' : 'var(--border-color)',
                       }}
                     >
                       {partner?.name?.charAt(0)}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', color: isSelected ? '#000000' : '#FAFAFA', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {partner?.name}
                           </span>
                           {partner?.verificationStatus === 'VERIFIED' && (
-                            <CheckCircle2 size={13} color="#10b981" />
+                            <CheckCircle2 size={13} color={isSelected ? '#000000' : '#10b981'} />
                           )}
                         </div>
                       </div>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <p style={{ fontSize: '0.78rem', color: isSelected ? '#222222' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
                         {c.lastMessage?.content || 'Started conversation'}
                       </p>
                     </div>
@@ -179,43 +178,46 @@ export default function ChatModule({ initialRecipient }) {
         </div>
 
         {/* Right Main Chat Window */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'rgba(10, 15, 29, 0.6)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-secondary)' }}>
           {activePartner ? (
             <>
               {/* Chat Header */}
               <div
                 style={{
-                  padding: '1rem 1.5rem',
-                  borderBottom: '1px solid var(--border-color)',
+                  padding: '1.25rem 2rem',
+                  borderBottom: '2px solid var(--border-color)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  background: 'rgba(15, 23, 42, 0.6)',
+                  background: 'var(--bg-primary)',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div
                     style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #2563eb, #10b981)',
+                      width: 44,
+                      height: 44,
+                      background: 'var(--accent)',
+                      color: '#000000',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontWeight: 700,
+                      fontWeight: 900,
+                      fontSize: '1.1rem',
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      border: '2px solid #000000',
                     }}
                   >
                     {activePartner.name?.charAt(0)}
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <h3 style={{ fontSize: '1.15rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                       {activePartner.name}
                       {activePartner.verificationStatus === 'VERIFIED' && (
-                        <CheckCircle2 size={14} color="#10b981" />
+                        <CheckCircle2 size={15} color="#10b981" />
                       )}
                     </h3>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                       {activePartner.role} • {activePartner.collegeId?.name || 'GTU'}
                     </p>
                   </div>
@@ -223,11 +225,11 @@ export default function ChatModule({ initialRecipient }) {
               </div>
 
               {/* Chat Messages */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 {messages.length === 0 ? (
                   <div style={{ textAlign: 'center', color: 'var(--text-muted)', margin: 'auto' }}>
-                    <MessageSquare size={36} style={{ margin: '0 auto 0.5rem', opacity: 0.4 }} />
-                    <p>No messages yet. Say hello to {activePartner.name}!</p>
+                    <MessageSquare size={44} style={{ margin: '0 auto 0.75rem', color: 'var(--accent)' }} />
+                    <p style={{ textTransform: 'uppercase', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700 }}>No messages yet. Say hello to {activePartner.name}!</p>
                   </div>
                 ) : (
                   messages.map((msg, idx) => {
@@ -237,32 +239,31 @@ export default function ChatModule({ initialRecipient }) {
                         key={idx}
                         style={{
                           alignSelf: isMe ? 'flex-end' : 'flex-start',
-                          maxWidth: '70%',
+                          maxWidth: '75%',
                         }}
                       >
                         <div
                           style={{
-                            background: isMe
-                              ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)'
-                              : 'rgba(30, 41, 59, 0.8)',
-                            color: '#fff',
-                            padding: '0.75rem 1rem',
-                            borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                            border: isMe ? 'none' : '1px solid var(--border-color)',
-                            fontSize: '0.875rem',
-                            lineHeight: 1.4,
-                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                            background: isMe ? 'var(--accent)' : 'var(--bg-primary)',
+                            color: isMe ? '#000000' : '#FAFAFA',
+                            padding: '0.85rem 1.25rem',
+                            border: '2px solid',
+                            borderColor: isMe ? 'var(--accent)' : 'var(--border-color)',
+                            fontSize: '0.95rem',
+                            fontWeight: isMe ? 600 : 400,
+                            lineHeight: 1.5,
                           }}
                         >
                           {msg.content}
                         </div>
                         <div
                           style={{
-                            fontSize: '0.65rem',
-                            color: 'var(--text-muted)',
-                            marginTop: '0.25rem',
+                            fontSize: '0.68rem',
+                            color: 'var(--text-dim)',
+                            marginTop: '0.35rem',
                             textAlign: isMe ? 'right' : 'left',
-                            padding: '0 0.25rem',
+                            fontFamily: 'Space Grotesk, sans-serif',
+                            textTransform: 'uppercase',
                           }}
                         >
                           {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -274,33 +275,33 @@ export default function ChatModule({ initialRecipient }) {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input Form */}
-              <form
-                onSubmit={handleSendMessage}
+              {/* Chat Input Bar */}
+              <div
                 style={{
-                  padding: '1rem 1.5rem',
-                  borderTop: '1px solid var(--border-color)',
-                  display: 'flex',
-                  gap: '0.75rem',
-                  background: 'rgba(15, 23, 42, 0.6)',
+                  padding: '1.25rem 2rem',
+                  borderTop: '2px solid var(--border-color)',
+                  background: 'var(--bg-primary)',
                 }}
               >
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder={`Write a message to ${activePartner.name}...`}
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  style={{ flex: 1 }}
-                />
-                <button type="submit" className="btn btn-primary" style={{ padding: '0 1.25rem' }}>
-                  <Send size={16} />
-                </button>
-              </form>
+                <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '1rem' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder={`Message ${activePartner.name}...`}
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    style={{ flex: 1 }}
+                  />
+                  <button type="submit" className="btn btn-primary" style={{ padding: '0 1.75rem' }}>
+                    <Send size={16} /> Send
+                  </button>
+                </form>
+              </div>
             </>
           ) : (
-            <div style={{ textAlign: 'center', margin: 'auto', color: 'var(--text-muted)' }}>
-              Select a conversation to start chatting
+            <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <MessageSquare size={48} style={{ margin: '0 auto 1rem', color: 'var(--accent)' }} />
+              <h3 style={{ textTransform: 'uppercase', fontFamily: 'Space Grotesk, sans-serif' }}>Select a conversation to start chatting</h3>
             </div>
           )}
         </div>
