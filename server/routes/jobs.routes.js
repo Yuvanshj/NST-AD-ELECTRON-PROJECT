@@ -3,6 +3,7 @@ import { Job } from '../models/Job.js';
 import { JobApplication } from '../models/JobApplication.js';
 import { User } from '../models/User.js';
 import { Profile } from '../models/Profile.js';
+import { College } from '../models/College.js';
 import { Notification } from '../models/Notification.js';
 
 export const jobsRouter = express.Router();
@@ -54,8 +55,10 @@ jobsRouter.get('/', async (req, res) => {
           company: j.company,
           location: j.location,
           employmentType: j.employmentType,
+          jobType: j.employmentType, // Safe alias for frontend
           experienceYears: j.experienceYears,
-          skillsRequired: j.skillsRequired,
+          experienceLevel: j.experienceYears,
+          skillsRequired: j.skillsRequired || [],
           salaryRange: j.salaryRange,
           description: j.description,
           canRefer: j.canRefer,
@@ -76,20 +79,98 @@ jobsRouter.get('/', async (req, res) => {
   }
 });
 
-// Create job
+// Create job with robust field normalization
 jobsRouter.post('/', async (req, res) => {
   try {
-    const job = await Job.create(req.body);
-    res.json(job);
+    const {
+      title,
+      company,
+      location,
+      salaryRange,
+      description,
+      skillsRequired,
+      referralInstructions,
+    } = req.body;
+
+    const posterId = req.body.posterId || req.body.postedBy || req.body.userId;
+    if (!posterId) {
+      return res.status(400).json({ message: 'posterId is required to post an opening' });
+    }
+
+    let collegeId = req.body.collegeId;
+    if (!collegeId) {
+      const user = await User.findById(posterId);
+      collegeId = user?.collegeId;
+    }
+    if (!collegeId) {
+      const firstCol = await College.findOne();
+      collegeId = firstCol?._id;
+    }
+
+    const employmentType = req.body.employmentType || req.body.jobType || 'FULL_TIME';
+    const canRefer =
+      req.body.canRefer !== undefined
+        ? Boolean(req.body.canRefer)
+        : req.body.isReferralAvailable !== undefined
+        ? Boolean(req.body.isReferralAvailable)
+        : true;
+
+    const deadline =
+      req.body.deadline ||
+      new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const experienceYears = req.body.experienceYears || req.body.experienceLevel || '1-3 Years';
+
+    const parsedSkills = Array.isArray(skillsRequired)
+      ? skillsRequired
+      : typeof skillsRequired === 'string'
+      ? skillsRequired
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    const job = await Job.create({
+      posterId,
+      collegeId,
+      title: title || 'Software Engineer',
+      company: company || 'Gujarat Tech Co.',
+      location: location || 'Ahmedabad, Gujarat',
+      employmentType,
+      experienceYears,
+      skillsRequired: parsedSkills,
+      salaryRange: salaryRange || 'Competitive',
+      description: description || 'Exciting engineering role with GTU alumni referral support.',
+      canRefer,
+      referralInstructions:
+        referralInstructions ||
+        'Alumni referral available for qualified Gujarat engineering candidates.',
+      deadline,
+      status: 'ACTIVE',
+    });
+
+    res.status(201).json({ success: true, job });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Apply for job
+// Apply for job / Request referral
 jobsRouter.post('/apply', async (req, res) => {
   try {
-    const { jobId, applicantId, resumeUrl, coverNote, referralRequested } = req.body;
+    const { jobId } = req.body;
+    const applicantId = req.body.applicantId || req.body.userId;
+    const resumeUrl = req.body.resumeUrl || 'https://drive.google.com/sample-resume.pdf';
+    const coverNote = req.body.coverNote || req.body.coverLetter || '';
+    const referralRequested =
+      req.body.referralRequested !== undefined
+        ? Boolean(req.body.referralRequested)
+        : req.body.requestReferral !== undefined
+        ? Boolean(req.body.requestReferral)
+        : true;
+
+    if (!jobId || !applicantId) {
+      return res.status(400).json({ message: 'jobId and applicantId are required' });
+    }
 
     const existing = await JobApplication.findOne({ jobId, applicantId });
     if (existing) {
@@ -101,7 +182,8 @@ jobsRouter.post('/apply', async (req, res) => {
       applicantId,
       resumeUrl,
       coverNote,
-      referralRequested: !!referralRequested,
+      referralRequested,
+      status: 'APPLIED',
     });
 
     const job = await Job.findById(jobId);
@@ -110,22 +192,54 @@ jobsRouter.post('/apply', async (req, res) => {
     if (job) {
       await Notification.create({
         userId: job.posterId,
-        title: 'New Job Applicant',
-        message: `${applicant?.fullName || 'A candidate'} applied for "${job.title}" at ${job.company}${referralRequested ? ' with a referral request' : ''}.`,
+        title: 'New Referral Application',
+        message: `${applicant?.fullName || 'A candidate'} applied for "${job.title}" at ${job.company}${
+          referralRequested ? ' with an internal referral request' : ''
+        }.`,
         type: 'JOB',
       });
     }
 
-    res.json(app);
+    res.status(201).json({ success: true, application: app });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Get poster's applications
+// Get applicant's submitted applications
+jobsRouter.get('/applications/:userId', async (req, res) => {
+  try {
+    const apps = await JobApplication.find({ applicantId: req.params.userId })
+      .populate({
+        path: 'jobId',
+        populate: [
+          { path: 'posterId', select: 'fullName email' },
+          { path: 'collegeId', select: 'name code' },
+        ],
+      })
+      .sort({ createdAt: -1 });
+
+    const formatted = apps.map((a) => ({
+      _id: a._id,
+      id: a._id,
+      job: a.jobId,
+      resumeUrl: a.resumeUrl,
+      coverNote: a.coverNote,
+      referralRequested: a.referralRequested,
+      status: a.status,
+      appliedAt: a.createdAt,
+    }));
+
+    res.json({ success: true, count: formatted.length, applications: formatted });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Get poster's jobs and referral applicant pipeline
 jobsRouter.get('/poster/:posterId', async (req, res) => {
   try {
-    const jobs = await Job.find({ posterId: req.params.posterId });
+    const jobs = await Job.find({ posterId: req.params.posterId }).sort({ createdAt: -1 });
 
     const result = await Promise.all(
       jobs.map(async (job) => {
@@ -135,6 +249,7 @@ jobsRouter.get('/poster/:posterId', async (req, res) => {
             const prof = await Profile.findOne({ userId: a.applicantId?._id });
             return {
               id: a._id,
+              _id: a._id,
               jobId: a.jobId,
               applicantId: a.applicantId?._id,
               applicantName: a.applicantId?.fullName,
@@ -145,6 +260,7 @@ jobsRouter.get('/poster/:posterId', async (req, res) => {
               coverNote: a.coverNote,
               referralRequested: a.referralRequested,
               status: a.status,
+              createdAt: a.createdAt,
             };
           })
         );
@@ -152,13 +268,13 @@ jobsRouter.get('/poster/:posterId', async (req, res) => {
       })
     );
 
-    res.json(result);
+    res.json({ success: true, postings: result });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// Update application status
+// Update application status (e.g. UNDER_REVIEW, REFERRED, SHORTLISTED, REJECTED)
 jobsRouter.put('/application/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
@@ -167,12 +283,12 @@ jobsRouter.put('/application/:id/status', async (req, res) => {
 
     await Notification.create({
       userId: app.applicantId,
-      title: 'Application Status Updated',
-      message: `Your application status has been updated to: ${status.replace('_', ' ')}`,
+      title: 'Referral Status Updated',
+      message: `Your referral application status has been updated to: ${status.replace('_', ' ')}`,
       type: 'JOB',
     });
 
-    res.json(app);
+    res.json({ success: true, application: app });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

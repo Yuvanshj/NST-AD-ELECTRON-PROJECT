@@ -110,6 +110,12 @@ export const api = {
     create: (payload) => request('/jobs', { method: 'POST', body: JSON.stringify(payload) }),
     apply: (payload) => request('/jobs/apply', { method: 'POST', body: JSON.stringify(payload) }),
     getMyApplications: (userId) => request(`/jobs/applications/${userId}`),
+    getPosterJobs: (posterId) => request(`/jobs/poster/${posterId}`),
+    updateStatus: (appId, status) =>
+      request(`/jobs/application/${appId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+      }),
   },
 
   // Donations & Giving Transparency
