@@ -7,10 +7,7 @@ import {
   XCircle,
   FileText,
   Upload,
-  UserCheck,
-  Search,
   Building2,
-  AlertCircle,
 } from 'lucide-react';
 
 export default function VerificationQueueModule() {
@@ -18,8 +15,7 @@ export default function VerificationQueueModule() {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCollege, setSelectedCollege] = useState('');
-  const [reviewNotes, setReviewNotes] = useState('');
-  const [activeModal, setActiveModal] = useState(null); // request for reject modal
+  const [activeModal, setActiveModal] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('GTU Enrollment number could not be validated in convocation records.');
   const [bulkCsvText, setBulkCsvText] = useState('');
   const [showBulkModal, setShowBulkModal] = useState(false);
@@ -66,7 +62,6 @@ export default function VerificationQueueModule() {
   const handleBulkUpload = async (e) => {
     e.preventDefault();
     try {
-      // Parse CSV lines: name, email, gtuEnrollment, batchYear, degree, branch
       const lines = bulkCsvText.trim().split('\n');
       const records = [];
       for (const line of lines) {
@@ -96,17 +91,18 @@ export default function VerificationQueueModule() {
 
   return (
     <div className="page-wrapper animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1.5rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <ShieldAlert color="#f59e0b" /> Registrar Verification Queue
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <span>Registrar Verification Queue</span>
+            <span className="badge badge-referral" style={{ fontSize: '0.8rem' }}>GTU MASTER</span>
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Verify alumni credentials against Gujarat Technological University (GTU) academic records before conferring trusted voting & networking rights.
+          <p style={{ marginTop: '0.5rem', fontSize: '1.05rem', maxWidth: '75ch' }}>
+            Verify alumni credentials against Gujarat Technological University academic records before conferring trusted voting and networking rights.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', gap: '1rem' }}>
           <button
             onClick={() => setShowBulkModal(true)}
             className="btn btn-secondary"
@@ -120,12 +116,14 @@ export default function VerificationQueueModule() {
       {bulkSuccess && (
         <div
           style={{
-            background: 'rgba(16, 185, 129, 0.2)',
-            border: '1px solid rgba(16, 185, 129, 0.4)',
-            color: '#34d399',
-            padding: '0.85rem 1.25rem',
-            borderRadius: 8,
-            marginBottom: '1.5rem',
+            background: 'var(--bg-secondary)',
+            border: '2px solid var(--accent)',
+            color: 'var(--accent)',
+            padding: '1.25rem 1.75rem',
+            marginBottom: '2rem',
+            fontFamily: 'Space Grotesk, sans-serif',
+            fontWeight: 800,
+            textTransform: 'uppercase',
           }}
         >
           {bulkSuccess}
@@ -133,14 +131,16 @@ export default function VerificationQueueModule() {
       )}
 
       {/* Filter Bar */}
-      <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        <Building2 size={18} color="var(--text-muted)" />
-        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Filter by Institution:</span>
+      <div className="glass-panel" style={{ padding: '1.5rem 2rem', marginBottom: '2.5rem', display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <Building2 size={18} color="var(--accent)" />
+        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontFamily: 'Space Grotesk, sans-serif', textTransform: 'uppercase', fontWeight: 700 }}>
+          Filter by Institution:
+        </span>
         <select
           className="form-select"
           value={selectedCollege}
           onChange={(e) => setSelectedCollege(e.target.value)}
-          style={{ maxWidth: 320 }}
+          style={{ maxWidth: 360 }}
         >
           <option value="">All Gujarat Engineering Colleges</option>
           {colleges.map((col) => (
@@ -149,14 +149,14 @@ export default function VerificationQueueModule() {
             </option>
           ))}
         </select>
-        <div style={{ marginLeft: 'auto', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          Pending In Queue: <strong style={{ color: '#fbbf24' }}>{pendingRequests.length}</strong>
+        <div style={{ marginLeft: 'auto', fontSize: '0.9rem', color: 'var(--text-muted)', fontFamily: 'Space Grotesk, sans-serif', textTransform: 'uppercase' }}>
+          Pending In Queue: <strong style={{ color: 'var(--accent)', fontSize: '1.2rem' }}>{pendingRequests.length}</strong>
         </div>
       </div>
 
       {/* Pending Table */}
-      <div className="glass-panel" style={{ overflow: 'hidden' }}>
-        <div className="table-container">
+      <div className="glass-panel" style={{ marginBottom: '2.5rem', padding: 0 }}>
+        <div className="table-container" style={{ border: 'none' }}>
           <table className="data-table">
             <thead>
               <tr>
@@ -172,42 +172,46 @@ export default function VerificationQueueModule() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                     Loading verification records...
                   </td>
                 </tr>
               ) : pendingRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    <CheckCircle2 size={36} color="#10b981" style={{ margin: '0 auto 0.75rem', display: 'block' }} />
-                    All alumni verification requests are up to date!
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
+                    <CheckCircle2 size={40} color="var(--accent)" style={{ margin: '0 auto 1rem', display: 'block' }} />
+                    <span style={{ fontFamily: 'Space Grotesk, sans-serif', textTransform: 'uppercase', fontWeight: 700, fontSize: '1.1rem' }}>
+                      All alumni verification requests are cleared and up to date!
+                    </span>
                   </td>
                 </tr>
               ) : (
                 pendingRequests.map((req) => (
                   <tr key={req._id}>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{req.userId?.name || 'Alumnus'}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{req.userId?.email}</div>
+                      <div style={{ fontWeight: 800, textTransform: 'uppercase', color: '#FAFAFA' }}>{req.userId?.name || 'Alumnus'}</div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{req.userId?.email}</div>
                     </td>
                     <td>
-                      <div style={{ fontSize: '0.85rem' }}>{req.collegeId?.code || 'GTU'}</div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{req.collegeId?.name}</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase' }}>{req.collegeId?.code || 'GTU'}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{req.collegeId?.name}</div>
                     </td>
                     <td>
                       <span
                         style={{
                           fontFamily: 'monospace',
-                          background: 'rgba(255, 255, 255, 0.08)',
-                          padding: '0.2rem 0.5rem',
-                          borderRadius: 4,
-                          fontSize: '0.85rem',
+                          background: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-color)',
+                          padding: '0.3rem 0.65rem',
+                          fontSize: '0.9rem',
+                          fontWeight: 700,
+                          color: '#FAFAFA',
                         }}
                       >
                         {req.gtuEnrollment}
                       </span>
                     </td>
-                    <td>
+                    <td style={{ fontFamily: 'Space Grotesk, sans-serif', textTransform: 'uppercase' }}>
                       {req.batchYear} ({req.branch})
                     </td>
                     <td>
@@ -219,22 +223,24 @@ export default function VerificationQueueModule() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '0.35rem',
-                          color: '#60a5fa',
+                          color: 'var(--accent)',
                           textDecoration: 'none',
-                          fontSize: '0.8rem',
+                          fontSize: '0.85rem',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
                         }}
                       >
-                        <FileText size={14} /> GTU Degree Doc
+                        <FileText size={15} /> GTU Degree Doc
                       </a>
                     </td>
                     <td>
                       <span className="badge badge-pending">PENDING REGISTRAR</span>
                     </td>
                     <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
+                      <div style={{ display: 'inline-flex', gap: '0.65rem' }}>
                         <button
                           onClick={() => handleVerify(req._id)}
-                          className="btn btn-success btn-sm"
+                          className="btn btn-primary btn-sm"
                           title="Verify and confer GTU Verified badge"
                         >
                           <CheckCircle2 size={14} /> Accept
@@ -260,10 +266,10 @@ export default function VerificationQueueModule() {
       {activeModal && (
         <div className="modal-overlay">
           <div className="modal-dialog">
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#f87171' }}>
+            <h3 style={{ fontSize: '1.4rem', marginBottom: '0.75rem', color: '#ef4444', textTransform: 'uppercase' }}>
               Reject Verification: {activeModal.userId?.name}
             </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
               Specify the reason for rejection. This explanation will be logged to the immutable audit trail and emailed to the applicant.
             </p>
             <div className="form-group">
@@ -275,7 +281,7 @@ export default function VerificationQueueModule() {
                 onChange={(e) => setRejectionReason(e.target.value)}
               />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
               <button onClick={() => setActiveModal(null)} className="btn btn-secondary">
                 Cancel
               </button>
@@ -290,11 +296,11 @@ export default function VerificationQueueModule() {
       {/* Bulk Master Import Modal */}
       {showBulkModal && (
         <div className="modal-overlay">
-          <div className="modal-dialog" style={{ maxWidth: 650 }}>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
+          <div className="modal-dialog" style={{ maxWidth: 700 }}>
+            <h3 style={{ fontSize: '1.4rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
               Registrar Batch CSV Import (Convocation Master Data)
             </h3>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.75rem' }}>
               Import historical graduation data provided by the examination controller. Alumni matching these enrollment records are immediately auto-verified.
             </p>
 
@@ -304,7 +310,7 @@ export default function VerificationQueueModule() {
                 <textarea
                   className="form-textarea"
                   rows={6}
-                  style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}
+                  style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
                   placeholder={`Anand Dave, anand.dave@example.com, 170280116045, 2021, B.E., Computer Engineering\nBhavik Shah, bhavik.shah@example.com, 180280116099, 2022, B.E., Information Technology`}
                   value={bulkCsvText}
                   onChange={(e) => setBulkCsvText(e.target.value)}
@@ -312,7 +318,7 @@ export default function VerificationQueueModule() {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="button" onClick={() => setShowBulkModal(false)} className="btn btn-secondary">
                   Cancel
                 </button>
