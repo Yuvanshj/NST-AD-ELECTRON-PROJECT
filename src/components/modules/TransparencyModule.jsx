@@ -9,7 +9,6 @@ import {
   Building2,
   FileText,
   Plus,
-  CheckCircle2,
   Lock,
 } from 'lucide-react';
 
@@ -78,13 +77,14 @@ export default function TransparencyModule() {
 
   return (
     <div className="page-wrapper animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1.5rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <FileSpreadsheet color="#3b82f6" /> Public Transparency Fund Ledger
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <span>Public Transparency Escrow</span>
+            <span className="badge badge-referral" style={{ fontSize: '0.8rem' }}>ZERO BLACK-BOX</span>
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Zero black-box giving: Track every single rupee contributed and spent across Gujarat technical colleges with auditable invoices and vendor disbursements.
+          <p style={{ marginTop: '0.5rem', fontSize: '1.05rem', maxWidth: '75ch' }}>
+            Track every single rupee contributed and spent across Gujarat technical colleges with auditable invoices and public vendor disbursements.
           </p>
         </div>
 
@@ -95,48 +95,53 @@ export default function TransparencyModule() {
         )}
       </div>
 
-      {/* Financial Health Summary Cards */}
+      {/* Financial Health Summary Cards with Massive Scale */}
       <div className="stats-grid">
         <div className="stat-card">
+          <div className="massive-bg-num">01</div>
           <div className="stat-label">Total Alumni Giving (Inflow)</div>
-          <div className="stat-val" style={{ color: '#34d399' }}>
+          <div className="stat-val" style={{ color: 'var(--accent)' }}>
             ₹{totalInflow.toLocaleString()}
           </div>
-          <div className="stat-trend">
+          <div className="stat-trend" style={{ color: '#10b981' }}>
             <TrendingUp size={14} /> 100% 80G Certified Inflows
           </div>
         </div>
 
         <div className="stat-card">
+          <div className="massive-bg-num">02</div>
           <div className="stat-label">Utilized / Disbursed (Outflow)</div>
-          <div className="stat-val" style={{ color: '#f87171' }}>
+          <div className="stat-val" style={{ color: '#ef4444' }}>
             ₹{totalOutflow.toLocaleString()}
           </div>
-          <div className="stat-trend" style={{ color: '#94a3b8' }}>
-            <TrendingDown size={14} /> Verified Vendor Invoices
+          <div className="stat-trend">
+            <TrendingDown size={14} color="#ef4444" /> Verified Vendor Invoices
           </div>
         </div>
 
         <div className="stat-card">
+          <div className="massive-bg-num">03</div>
           <div className="stat-label">Live Escrow Balance</div>
-          <div className="stat-val" style={{ color: '#60a5fa' }}>
+          <div className="stat-val" style={{ color: '#FAFAFA' }}>
             ₹{netEscrowBalance.toLocaleString()}
           </div>
-          <div className="stat-trend">
+          <div className="stat-trend" style={{ color: 'var(--accent)' }}>
             <Lock size={14} /> In State Treasury Escrow
           </div>
         </div>
       </div>
 
       {/* Filter */}
-      <div className="glass-panel" style={{ padding: '1rem 1.5rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        <Building2 size={16} color="var(--text-muted)" />
-        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Filter Ledger by College:</span>
+      <div className="glass-panel" style={{ padding: '1.5rem 2rem', marginBottom: '2.5rem', display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+        <Building2 size={18} color="var(--accent)" />
+        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontFamily: 'Space Grotesk, sans-serif', textTransform: 'uppercase', fontWeight: 700 }}>
+          Filter Ledger by Institution:
+        </span>
         <select
           className="form-select"
           value={selectedCollege}
           onChange={(e) => setSelectedCollege(e.target.value)}
-          style={{ maxWidth: 300 }}
+          style={{ maxWidth: 360 }}
         >
           <option value="">All Institutions (Consolidated State Escrow)</option>
           {colleges.map((col) => (
@@ -148,15 +153,15 @@ export default function TransparencyModule() {
       </div>
 
       {/* Verified Disbursements Table */}
-      <div className="glass-panel" style={{ marginBottom: '2rem', overflow: 'hidden' }}>
-        <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <ShieldCheck size={18} color="#34d399" />
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
-            Published Disbursements & Vendor Utilization ({ledger.disbursements.length})
+      <div className="glass-panel" style={{ marginBottom: '2.5rem', padding: 0 }}>
+        <div style={{ padding: '1.5rem 2rem', borderBottom: '2px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <ShieldCheck size={20} color="var(--accent)" />
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, textTransform: 'uppercase' }}>
+            Published Disbursements & Vendor Invoices ({ledger.disbursements.length})
           </h3>
         </div>
 
-        <div className="table-container">
+        <div className="table-container" style={{ border: 'none' }}>
           <table className="data-table">
             <thead>
               <tr>
@@ -171,20 +176,22 @@ export default function TransparencyModule() {
             <tbody>
               {ledger.disbursements.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                     No disbursements recorded for this institution yet.
                   </td>
                 </tr>
               ) : (
                 ledger.disbursements.map((d) => (
                   <tr key={d._id}>
-                    <td>{new Date(d.disbursedAt || d.createdAt).toLocaleDateString()}</td>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{d.recipientVendor}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{d.collegeId?.name}</div>
+                    <td style={{ fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700 }}>
+                      {new Date(d.disbursedAt || d.createdAt).toLocaleDateString()}
                     </td>
-                    <td>{d.purpose}</td>
-                    <td style={{ fontWeight: 700, color: '#f87171' }}>
+                    <td>
+                      <div style={{ fontWeight: 800, textTransform: 'uppercase', color: '#FAFAFA' }}>{d.recipientVendor}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{d.collegeId?.name}</div>
+                    </td>
+                    <td style={{ color: 'var(--text-muted)' }}>{d.purpose}</td>
+                    <td style={{ fontWeight: 800, color: '#ef4444', fontFamily: 'Space Grotesk, sans-serif', fontSize: '1rem' }}>
                       -₹{d.amount.toLocaleString()}
                     </td>
                     <td>
@@ -193,7 +200,7 @@ export default function TransparencyModule() {
                           href={d.invoiceUrl}
                           target="_blank"
                           rel="noreferrer"
-                          style={{ color: '#60a5fa', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                          style={{ color: 'var(--accent)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.35rem', fontWeight: 700, textTransform: 'uppercase', fontSize: '0.8rem' }}
                         >
                           <FileText size={14} /> Audit Invoice
                         </a>
@@ -216,8 +223,8 @@ export default function TransparencyModule() {
       {showDisburseModal && (
         <div className="modal-overlay">
           <div className="modal-dialog">
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Record Transparent Fund Disbursement</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+            <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Record Transparent Fund Disbursement</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.75rem' }}>
               Publish payment details to the public ledger for community verification.
             </p>
 
@@ -269,7 +276,7 @@ export default function TransparencyModule() {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="button" onClick={() => setShowDisburseModal(false)} className="btn btn-secondary">
                   Cancel
                 </button>
