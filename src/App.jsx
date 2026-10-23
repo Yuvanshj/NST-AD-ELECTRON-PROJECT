@@ -63,9 +63,54 @@ function AppContent() {
 
   return (
     <div className="app-container">
+      {/* Brutalist Noise Texture Overlay */}
+      <svg className="noise-overlay" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <filter id="kinetic-noise">
+          <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#kinetic-noise)" />
+      </svg>
+
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+
       <div className="main-content">
         <Navbar />
+
+        {/* High-Energy Kinetic Marquee Ticker */}
+        <div className="kinetic-ticker-bar" role="marquee" aria-label="Gujarat State Alumni Network Activity Ticker">
+          <div className="ticker-track">
+            <div className="ticker-item">
+              <span>GUJARAT TECHNICAL UNIVERSITY • MAHASETU STATE ALUMNI PORTAL</span>
+              <span className="ticker-separator"></span>
+              <span>100% SECTION 80G TAX-EXEMPT ENDOWMENTS</span>
+              <span className="ticker-separator"></span>
+              <span>IMMUTABLE CONVOCATION REGISTRY VERIFICATION</span>
+              <span className="ticker-separator"></span>
+              <span>ALUMNI REFERRALS ACROSS TCS • ISRO • ADANI • L&T • RELIANCE</span>
+              <span className="ticker-separator"></span>
+              <span>PUBLIC ESCROW DISBURSEMENT LEDGER ONLINE</span>
+              <span className="ticker-separator"></span>
+              <span>50+ GUJARAT ENGINEERING COLLEGES CONNECTED</span>
+              <span className="ticker-separator"></span>
+            </div>
+            {/* Duplicate for infinite loop */}
+            <div className="ticker-item" aria-hidden="true">
+              <span>GUJARAT TECHNICAL UNIVERSITY • MAHASETU STATE ALUMNI PORTAL</span>
+              <span className="ticker-separator"></span>
+              <span>100% SECTION 80G TAX-EXEMPT ENDOWMENTS</span>
+              <span className="ticker-separator"></span>
+              <span>IMMUTABLE CONVOCATION REGISTRY VERIFICATION</span>
+              <span className="ticker-separator"></span>
+              <span>ALUMNI REFERRALS ACROSS TCS • ISRO • ADANI • L&T • RELIANCE</span>
+              <span className="ticker-separator"></span>
+              <span>PUBLIC ESCROW DISBURSEMENT LEDGER ONLINE</span>
+              <span className="ticker-separator"></span>
+              <span>50+ GUJARAT ENGINEERING COLLEGES CONNECTED</span>
+              <span className="ticker-separator"></span>
+            </div>
+          </div>
+        </div>
+
         {renderModule()}
       </div>
     </div>
