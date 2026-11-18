@@ -31,13 +31,16 @@
   "author": "Antigravity Pair",
   "license": "MIT",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.16.0",
     "mongodb-memory-server": "^11.3.0",
     "mongoose": "^8.9.5",
     "qrcode": "^1.5.4",
+    "razorpay": "^2.9.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
