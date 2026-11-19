@@ -1,25 +1,50 @@
 import express from 'express';
+import crypto from 'crypto';
+import Razorpay from 'razorpay';
 import { Campaign } from '../models/Campaign.js';
 import { Donation } from '../models/Donation.js';
 import { FundDisbursement } from '../models/FundDisbursement.js';
 import { College } from '../models/College.js';
 import { User } from '../models/User.js';
-import { Notification } from '../models/Notification.js';
 import { AuditLog } from '../models/AuditLog.js';
-import { verifyRazorpaySignature } from '../utils/crypto.js';
-import { generate80GReceiptHtml } from '../utils/receiptGenerator.js';
+import { verifyRazorpaySignature, verifyRazorpayWebhookSignature } from '../utils/crypto.js';
+import { generateReceiptHtml } from '../utils/receiptGenerator.js';
+import { authenticate, authorize, optionalAuthenticate, enforceTenantIsolation } from '../middleware/auth.js';
 
 export const donationsRouter = express.Router();
 
-// Get campaigns
+// Initialize Razorpay client if credentials are configured
+let razorpayClient = null;
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+
+if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
+  try {
+    razorpayClient = new Razorpay({
+      key_id: RAZORPAY_KEY_ID,
+      key_secret: RAZORPAY_KEY_SECRET,
+    });
+    console.log('[Donations] Real Razorpay SDK client initialized.');
+  } catch (err) {
+    console.error('[Donations] Failed to initialize Razorpay SDK:', err.message);
+  }
+}
+
+/**
+ * GET /api/donations/campaigns
+ * List active campaigns with financial progress
+ */
 donationsRouter.get('/campaigns', async (req, res) => {
   try {
     const { collegeId } = req.query;
-    const filter = {};
+    const filter = { status: { $ne: 'ARCHIVED' } };
     if (collegeId) filter.collegeId = collegeId;
 
-    const campaigns = await Campaign.find(filter).populate('collegeId', 'name code').sort({ createdAt: -1 });
-    const donations = await Donation.find().sort({ createdAt: -1 });
+    const campaigns = await Campaign.find(filter)
+      .populate('collegeId', 'name code city has80GExemption taxExemption80GNumber')
+      .sort({ createdAt: -1 });
+
+    const donations = await Donation.find({ paymentStatus: 'PAID' }).sort({ createdAt: -1 });
 
     const formatted = campaigns.map((camp) => {
       const campDonations = donations.filter((d) => d.campaignId?.toString() === camp._id.toString());
@@ -47,88 +72,239 @@ donationsRouter.get('/campaigns', async (req, res) => {
         percentAchieved: percent,
         recentDonations: recent,
         status: camp.status,
+        has80GExemption: camp.collegeId?.has80GExemption ?? true,
       };
     });
 
     res.json({ success: true, count: formatted.length, campaigns: formatted });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Create Order (Simulated Razorpay Order)
-donationsRouter.post('/create-order', async (req, res) => {
+/**
+ * POST /api/donations/create-order
+ * Create an order for a donation (using real Razorpay order or secure dev/test mode)
+ */
+donationsRouter.post('/create-order', optionalAuthenticate, async (req, res) => {
   try {
-    const { campaignId, donorId, userId, amount, donorPan, isAnonymous } = req.body;
-    const effectiveUserId = donorId || userId;
+    const { campaignId, donorId, userId, amount, donorPan, isAnonymous, donorName, donorEmail } = req.body;
+    const effectiveUserId = req.user?._id || donorId || userId;
+    const numericAmount = Number(amount);
 
-    const user = await User.findById(effectiveUserId);
-    const campaign = await Campaign.findById(campaignId);
-    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+    if (!campaignId) {
+      return res.status(400).json({ success: false, message: 'Campaign ID is required.' });
+    }
+    if (!numericAmount || numericAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Donation amount must be greater than zero.' });
+    }
 
-    const receiptNo = `80G-GOG-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const campaign = await Campaign.findById(campaignId).populate('collegeId');
+    if (!campaign) {
+      return res.status(404).json({ success: false, message: 'Campaign not found.' });
+    }
 
+    let user = null;
+    if (effectiveUserId) {
+      user = await User.findById(effectiveUserId);
+    }
+
+    const effectiveDonorName = donorName || user?.fullName || 'Gujarat Alumnus';
+    const effectiveDonorEmail = donorEmail || user?.email || '';
+
+    // Check 80G tax exemption eligibility on the institution
+    const isTaxExemptEligible = campaign.collegeId?.has80GExemption === true;
+    const receiptPrefix = isTaxExemptEligible ? '80G-GOG' : 'RCP-GOG';
+    const receiptNo = `${receiptPrefix}-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    let razorpayOrderId = '';
+    let isSandbox = false;
+
+    // Check if live Razorpay keys are configured
+    if (razorpayClient && RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
+      try {
+        const rzpOrder = await razorpayClient.orders.create({
+          amount: Math.round(numericAmount * 100), // in paise
+          currency: 'INR',
+          receipt: receiptNo,
+          notes: {
+            campaignId: String(campaign._id),
+            collegeId: String(campaign.collegeId?._id || campaign.collegeId),
+            userId: String(effectiveUserId || ''),
+            donorPan: donorPan || '',
+          },
+        });
+        razorpayOrderId = rzpOrder.id;
+      } catch (rzpErr) {
+        console.error('[Razorpay Order Creation Failed]', rzpErr);
+        if (process.env.NODE_ENV === 'production') {
+          return res.status(502).json({
+            success: false,
+            message: 'Failed to create payment order with payment gateway. Please try again.',
+          });
+        }
+      }
+    }
+
+    // Fallback for development / test environments when credentials are unset
+    if (!razorpayOrderId) {
+      if (process.env.NODE_ENV === 'production') {
+        return res.status(500).json({
+          success: false,
+          message: 'Payment gateway credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) must be configured in production.',
+        });
+      }
+      isSandbox = true;
+      razorpayOrderId = `order_${Math.random().toString(36).substring(2, 12)}`;
+    }
+
+    // Create pending donation record
     const donation = await Donation.create({
       campaignId,
-      collegeId: campaign.collegeId,
-      userId: effectiveUserId,
-      donorName: user?.fullName || 'Gujarat Alumnus',
-      donorPan: donorPan || 'ABCDE1234F',
-      amount: Number(amount),
-      isAnonymous: !!isAnonymous,
-      paymentMethod: 'RAZORPAY_SIMULATED',
+      collegeId: campaign.collegeId?._id || campaign.collegeId,
+      userId: effectiveUserId || null,
+      donorName: effectiveDonorName,
+      donorEmail: effectiveDonorEmail,
+      donorPan: donorPan ? donorPan.trim().toUpperCase() : '',
+      amount: numericAmount,
+      currency: 'INR',
+      isAnonymous: Boolean(isAnonymous),
+      paymentMethod: isSandbox ? 'RAZORPAY_SIMULATED' : 'RAZORPAY',
       paymentStatus: 'PENDING',
       receiptNumber: receiptNo,
-      taxReceiptNumber: receiptNo,
-      razorpayOrderId: 'order_' + Math.random().toString(36).substring(2, 10),
+      taxReceiptNumber: isTaxExemptEligible ? receiptNo : '',
+      isTaxExemptEligible,
+      razorpayOrderId,
     });
 
-    res.json({ success: true, donation, orderId: donation.razorpayOrderId });
+    res.json({
+      success: true,
+      donation,
+      orderId: razorpayOrderId,
+      keyId: RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+      amount: numericAmount,
+      currency: 'INR',
+      isSandbox,
+      isTaxExemptEligible,
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Verify Payment and issue 80G certificate
-donationsRouter.post('/verify-payment', async (req, res) => {
+/**
+ * POST /api/donations/verify-payment
+ * Verify Razorpay payment signature, finalize donation, issue receipt
+ */
+donationsRouter.post('/verify-payment', optionalAuthenticate, async (req, res) => {
   try {
-    const { donationId, razorpayPaymentId, razorpaySignature } = req.body;
+    const { donationId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+
+    if (!donationId) {
+      return res.status(400).json({ success: false, message: 'donationId is required for verification.' });
+    }
 
     const donation = await Donation.findById(donationId).populate('campaignId collegeId');
-    if (!donation) return res.status(404).json({ message: 'Donation not found' });
+    if (!donation) {
+      return res.status(404).json({ success: false, message: 'Donation record not found.' });
+    }
 
+    // Idempotency: If already paid, return existing verified state
+    if (donation.paymentStatus === 'PAID') {
+      const receiptHtml = generateReceiptHtml({
+        receiptNumber: donation.taxReceiptNumber || donation.receiptNumber,
+        collegeName: donation.collegeId?.name || 'Gujarat Technical Education',
+        donorName: donation.isAnonymous ? 'Anonymous Alumnus' : donation.donorName,
+        donorPan: donation.donorPan,
+        campaignTitle: donation.campaignId?.title || 'Higher Education Fund',
+        amount: donation.amount,
+        paymentReference: donation.razorpayPaymentId,
+        date: donation.createdAt,
+        isTaxExempt: donation.isTaxExemptEligible,
+        taxExemptionNumber: donation.collegeId?.taxExemption80GNumber,
+      });
+
+      return res.json({
+        success: true,
+        donation,
+        receiptHtml,
+        message: 'Payment already verified.',
+      });
+    }
+
+    const effectiveOrderId = razorpayOrderId || donation.razorpayOrderId;
+    const effectivePaymentId = razorpayPaymentId || `pay_sim_${Date.now()}`;
+    const effectiveSignature = razorpaySignature || `sig_sim_${Date.now()}`;
+
+    // Verify cryptographic signature
+    const isValidSignature = verifyRazorpaySignature(
+      effectiveOrderId,
+      effectivePaymentId,
+      effectiveSignature,
+      RAZORPAY_KEY_SECRET
+    );
+
+    if (!isValidSignature && process.env.NODE_ENV === 'production') {
+      donation.paymentStatus = 'FAILED';
+      donation.failureReason = 'Cryptographic signature mismatch';
+      await donation.save();
+
+      await AuditLog.create({
+        collegeId: donation.collegeId?._id,
+        userId: donation.userId,
+        userEmail: donation.donorName,
+        action: 'PAYMENT_VERIFICATION_FAILED',
+        category: 'SECURITY',
+        details: { donationId: donation._id, orderId: effectiveOrderId },
+      });
+
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid payment signature. Potential tampering detected.',
+      });
+    }
+
+    // Update donation status to PAID
     donation.paymentStatus = 'PAID';
-    donation.razorpayPaymentId = razorpayPaymentId || 'pay_sim_' + Date.now();
-    donation.razorpaySignature = razorpaySignature || 'sig_sim_' + Date.now();
+    donation.razorpayPaymentId = effectivePaymentId;
+    donation.razorpaySignature = effectiveSignature;
+    if (!donation.taxReceiptNumber && donation.isTaxExemptEligible) {
+      donation.taxReceiptNumber = donation.receiptNumber;
+    }
     await donation.save();
 
-    // Increment campaign
-    await Campaign.findByIdAndUpdate(donation.campaignId._id, {
-      $inc: { raisedAmount: donation.amount, donorCount: 1 },
-    });
+    // Increment campaign totals atomically
+    if (donation.campaignId?._id) {
+      await Campaign.findByIdAndUpdate(donation.campaignId._id, {
+        $inc: { raisedAmount: donation.amount, donorCount: 1 },
+      });
+    }
 
-    // Generate 80G Receipt HTML
-    const receiptHtml = generate80GReceiptHtml({
+    // Generate compliant receipt HTML
+    const receiptHtml = generateReceiptHtml({
       receiptNumber: donation.taxReceiptNumber || donation.receiptNumber,
-      collegeName: donation.collegeId?.name || 'Gujarat Engineering College',
-      donorName: donation.donorName,
+      collegeName: donation.collegeId?.name || 'Gujarat Technical Education',
+      donorName: donation.isAnonymous ? 'Anonymous Alumnus' : donation.donorName,
       donorPan: donation.donorPan,
       campaignTitle: donation.campaignId?.title || 'Higher Education Fund',
       amount: donation.amount,
       paymentReference: donation.razorpayPaymentId,
       date: donation.createdAt || new Date(),
+      isTaxExempt: donation.isTaxExemptEligible,
+      taxExemptionNumber: donation.collegeId?.taxExemption80GNumber,
     });
 
     await AuditLog.create({
       collegeId: donation.collegeId?._id,
       userId: donation.userId,
       userEmail: donation.donorName,
-      action: 'DONATION_80G_ISSUED',
+      action: donation.isTaxExemptEligible ? 'DONATION_80G_ISSUED' : 'DONATION_PAID',
       category: 'DONATION',
       details: {
-        receiptNumber: donation.taxReceiptNumber,
+        receiptNumber: donation.taxReceiptNumber || donation.receiptNumber,
         amount: donation.amount,
         donorPan: donation.donorPan,
+        isTaxExemptEligible: donation.isTaxExemptEligible,
       },
     });
 
@@ -136,67 +312,98 @@ donationsRouter.post('/verify-payment', async (req, res) => {
       success: true,
       donation,
       receiptHtml,
-      message: 'Donation verified and 80G certificate generated.',
+      message: donation.isTaxExemptEligible
+        ? 'Donation verified and Section 80G tax certificate generated.'
+        : 'Donation verified and official acknowledgement receipt generated.',
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Process donation (direct combined handler)
-donationsRouter.post('/process', async (req, res) => {
+/**
+ * POST /api/donations/webhook
+ * Razorpay Webhook handler for asynchronous payment capture and status reconciliation
+ */
+donationsRouter.post('/webhook', async (req, res) => {
   try {
-    const { campaignId, userId, amount, isAnonymous, donorPan, donorName } = req.body;
-    const campaign = await Campaign.findById(campaignId);
-    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+    const signature = req.headers['x-razorpay-signature'];
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
-    const college = await College.findById(campaign.collegeId);
-    const receiptNo = `80G-GOG-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    if (webhookSecret && !verifyRazorpayWebhookSignature(req.body, signature, webhookSecret)) {
+      return res.status(400).json({ success: false, message: 'Invalid webhook signature' });
+    }
 
-    const donation = await Donation.create({
-      campaignId,
-      collegeId: campaign.collegeId,
-      userId,
-      donorName: donorName || 'Alumnus Contributor',
-      donorPan: donorPan || 'ABCDE1234F',
-      amount: Number(amount),
-      isAnonymous: !!isAnonymous,
-      paymentMethod: 'UPI',
-      paymentStatus: 'PAID',
-      taxReceiptNumber: receiptNo,
-      razorpayPaymentId: 'pay_' + Date.now(),
-    });
+    const event = req.body.event;
+    const payload = req.body.payload;
 
-    campaign.raisedAmount += Number(amount);
-    campaign.donorCount += 1;
-    await campaign.save();
+    if (event === 'payment.captured') {
+      const payment = payload?.payment?.entity;
+      const orderId = payment?.order_id;
 
-    const receiptHtml = generate80GReceiptHtml(donation, college, campaign);
+      if (orderId) {
+        const donation = await Donation.findOne({ razorpayOrderId: orderId });
+        if (donation && donation.paymentStatus !== 'PAID') {
+          donation.paymentStatus = 'PAID';
+          donation.razorpayPaymentId = payment.id;
+          await donation.save();
 
-    res.json({ success: true, donation, receiptHtml });
+          await Campaign.findByIdAndUpdate(donation.campaignId, {
+            $inc: { raisedAmount: donation.amount, donorCount: 1 },
+          });
+
+          await AuditLog.create({
+            collegeId: donation.collegeId,
+            userId: donation.userId,
+            action: 'WEBHOOK_PAYMENT_CAPTURED',
+            category: 'PAYMENT',
+            details: { orderId, paymentId: payment.id, amount: donation.amount },
+          });
+        }
+      }
+    } else if (event === 'payment.failed') {
+      const payment = payload?.payment?.entity;
+      const orderId = payment?.order_id;
+      if (orderId) {
+        await Donation.findOneAndUpdate(
+          { razorpayOrderId: orderId },
+          { paymentStatus: 'FAILED', failureReason: payment?.error_description || 'Gateway reported failure' }
+        );
+      }
+    }
+
+    res.json({ status: 'ok' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Transparency Ledger
+/**
+ * GET /api/donations/transparency or /api/donations/ledger
+ * Public financial ledger of all verified contributions and disbursed funds
+ */
 const handleTransparencyLedger = async (req, res) => {
   try {
     const { collegeId } = req.query;
-    const filter = {};
+    const filter = { paymentStatus: 'PAID' };
     if (collegeId) filter.collegeId = collegeId;
 
-    const disbursements = await FundDisbursement.find(filter)
+    const disbFilter = {};
+    if (collegeId) disbFilter.collegeId = collegeId;
+
+    const disbursements = await FundDisbursement.find(disbFilter)
       .populate('campaignId', 'title')
       .populate('collegeId', 'name code')
       .sort({ disbursedAt: -1, createdAt: -1 });
 
-    const donations = await Donation.find(filter).sort({ createdAt: -1 });
+    const donations = await Donation.find(filter)
+      .select('-donorPan') // protect donor PAN from public transparency API
+      .sort({ createdAt: -1 });
 
     const totalRaised = donations.reduce((sum, d) => sum + (d.amount || 0), 0);
     const totalDisbursed = disbursements.reduce((sum, d) => sum + (d.amount || 0), 0);
 
-    const formatted = disbursements.map((d) => ({
+    const formattedDisbursements = disbursements.map((d) => ({
       _id: d._id,
       id: d._id,
       campaignId: d.campaignId?._id,
@@ -218,22 +425,30 @@ const handleTransparencyLedger = async (req, res) => {
       totalRaised,
       totalDisbursed,
       currentReserve: totalRaised - totalDisbursed,
-      donations,
-      disbursements: formatted,
+      donations: donations.map((d) => ({
+        _id: d._id,
+        donorName: d.isAnonymous ? 'Anonymous Alumnus' : d.donorName,
+        amount: d.amount,
+        receiptNumber: d.receiptNumber,
+        createdAt: d.createdAt,
+      })),
+      disbursements: formattedDisbursements,
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
 donationsRouter.get('/transparency', handleTransparencyLedger);
 donationsRouter.get('/ledger', handleTransparencyLedger);
 
-// Leaderboard / Honor Roll
+/**
+ * GET /api/donations/leaderboard or /honor-roll
+ */
 const handleHonorRoll = async (req, res) => {
   try {
     const { collegeId } = req.query;
-    const filter = {};
+    const filter = { paymentStatus: 'PAID' };
     if (collegeId) filter.collegeId = collegeId;
 
     const donations = await Donation.find(filter);
@@ -263,41 +478,58 @@ const handleHonorRoll = async (req, res) => {
 
     res.json({ success: true, count: leaderboard.length, honorRoll: leaderboard, leaderboard });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
 donationsRouter.get('/leaderboard', handleHonorRoll);
 donationsRouter.get('/honor-roll', handleHonorRoll);
 
-// Disburse funds
-donationsRouter.post('/disburse', async (req, res) => {
+/**
+ * POST /api/donations/disburse
+ * Admin fund disbursement with institutional validation and audit trail
+ */
+donationsRouter.post('/disburse', authenticate, authorize('SUPER_ADMIN', 'STATE_DIRECTOR', 'COLLEGE_ADMIN'), async (req, res) => {
   try {
-    const { campaignId, collegeId, recipientVendor, vendorName, amount, purpose, invoiceUrl, approvedBy } = req.body;
+    const { campaignId, collegeId, recipientVendor, vendorName, amount, purpose, invoiceUrl } = req.body;
+    const targetCollegeId = collegeId || req.user.collegeId?._id || req.user.collegeId;
+
+    if (!enforceTenantIsolation(req, targetCollegeId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You cannot disburse funds belonging to another college.',
+      });
+    }
+
+    const numericAmount = Number(amount);
+    if (!numericAmount || numericAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid disbursement amount is required.' });
+    }
 
     const disbursement = await FundDisbursement.create({
       campaignId: campaignId || null,
-      collegeId: collegeId || null,
-      amount: Number(amount),
+      collegeId: targetCollegeId,
+      amount: numericAmount,
       recipientVendor: recipientVendor || vendorName,
       vendorName: vendorName || recipientVendor,
       purpose,
       invoiceUrl,
-      approvedBy,
+      approvedBy: req.user._id,
       disbursedAt: new Date(),
     });
 
     await AuditLog.create({
-      collegeId,
-      userId: approvedBy,
+      collegeId: targetCollegeId,
+      userId: req.user._id,
+      userEmail: req.user.email,
       action: 'FUND_DISBURSED',
       category: 'DONATION',
-      details: { amount, vendor: recipientVendor || vendorName, purpose },
+      details: { amount: numericAmount, vendor: recipientVendor || vendorName, purpose },
     });
 
     res.json({ success: true, disbursement });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
