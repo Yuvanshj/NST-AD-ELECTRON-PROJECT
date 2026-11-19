@@ -1,5 +1,6 @@
-export function generate80GReceiptHtml(data) {
+export function generateReceiptHtml(data) {
   const words = convertNumberToWords(data.amount);
+  const isTaxExempt = !!data.isTaxExempt;
 
   return `
 <!DOCTYPE html>
@@ -8,31 +9,33 @@ export function generate80GReceiptHtml(data) {
   <meta charset="utf-8">
   <title>Receipt ${data.receiptNumber}</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; color: #1e293b; }
-    .receipt-container { border: 2px solid #0f766e; border-radius: 8px; padding: 30px; max-width: 700px; margin: auto; }
-    .header { text-align: center; border-bottom: 2px dashed #0f766e; padding-bottom: 20px; }
-    .header h1 { margin: 0; color: #0f766e; font-size: 24px; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; color: #1e293b; background: #fff; }
+    .receipt-container { border: 2px solid ${isTaxExempt ? '#0f766e' : '#2563eb'}; border-radius: 8px; padding: 30px; max-width: 700px; margin: auto; }
+    .header { text-align: center; border-bottom: 2px dashed ${isTaxExempt ? '#0f766e' : '#2563eb'}; padding-bottom: 20px; }
+    .header h1 { margin: 0; color: ${isTaxExempt ? '#0f766e' : '#1e3a8a'}; font-size: 24px; }
     .header p { margin: 4px 0; color: #64748b; font-size: 13px; }
-    .tax-banner { background: #f0fdfa; border: 1px solid #99f6e4; color: #0f766e; padding: 8px; text-align: center; font-weight: bold; margin: 20px 0; border-radius: 4px; font-size: 14px; }
+    .tax-banner { background: ${isTaxExempt ? '#f0fdfa' : '#eff6ff'}; border: 1px solid ${isTaxExempt ? '#99f6e4' : '#bfdbfe'}; color: ${isTaxExempt ? '#0f766e' : '#1d4ed8'}; padding: 10px; text-align: center; font-weight: bold; margin: 20px 0; border-radius: 4px; font-size: 13px; }
     .grid { display: flex; justify-content: space-between; margin: 15px 0; font-size: 14px; }
     .field-title { color: #64748b; font-size: 12px; text-transform: uppercase; }
     .field-value { font-weight: 600; margin-top: 2px; }
     .amount-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; margin: 20px 0; }
-    .amount-large { font-size: 26px; font-weight: bold; color: #047857; }
+    .amount-large { font-size: 26px; font-weight: bold; color: ${isTaxExempt ? '#047857' : '#1d4ed8'}; }
     .footer { margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px; font-size: 12px; color: #64748b; display: flex; justify-content: space-between; align-items: flex-end; }
-    .stamp { border: 2px solid #047857; color: #047857; padding: 8px 12px; border-radius: 4px; display: inline-block; font-weight: bold; text-transform: uppercase; font-size: 11px; transform: rotate(-3deg); }
+    .stamp { border: 2px solid ${isTaxExempt ? '#047857' : '#1d4ed8'}; color: ${isTaxExempt ? '#047857' : '#1d4ed8'}; padding: 8px 12px; border-radius: 4px; display: inline-block; font-weight: bold; text-transform: uppercase; font-size: 11px; transform: rotate(-3deg); }
   </style>
 </head>
 <body>
   <div class="receipt-container">
     <div class="header">
-      <h1>${data.collegeName} Alumni Foundation</h1>
-      <p>Recognized under Section 80G of the Indian Income Tax Act, 1961</p>
-      <p>Reg. No: GUJ/ALUM/TRUST/80G/2026/0491 | PAN: AAATL0280D</p>
+      <h1>${data.collegeName || 'Gujarat Technical Education'} Alumni Foundation</h1>
+      <p>Department of Higher Education & GTU Gujarat Alumni Network</p>
+      ${isTaxExempt && data.taxExemptionNumber ? `<p>80G Reg. No: ${data.taxExemptionNumber} | Eligible u/s 80G</p>` : `<p>Official Contribution Acknowledgement</p>`}
     </div>
 
     <div class="tax-banner">
-      SECTION 80G TAX EXEMPTION CERTIFICATE (ELIGIBLE FOR 50% TAX DEDUCTION U/S 80G)
+      ${isTaxExempt
+        ? 'SECTION 80G TAX EXEMPTION CERTIFICATE (ELIGIBLE FOR 50% TAX DEDUCTION U/S 80G)'
+        : 'MAHASETU DONATION ACKNOWLEDGEMENT (GENERAL INSTITUTIONAL CONTRIBUTION)'}
     </div>
 
     <div class="grid">
@@ -42,7 +45,7 @@ export function generate80GReceiptHtml(data) {
       </div>
       <div>
         <div class="field-title">Date</div>
-        <div class="field-value">${new Date(data.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+        <div class="field-value">${new Date(data.date || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
       </div>
     </div>
 
@@ -60,11 +63,11 @@ export function generate80GReceiptHtml(data) {
     <div class="grid">
       <div>
         <div class="field-title">Purpose / Campaign</div>
-        <div class="field-value">${data.campaignTitle}</div>
+        <div class="field-value">${data.campaignTitle || 'General College Development Fund'}</div>
       </div>
       <div>
         <div class="field-title">Payment Reference ID</div>
-        <div class="field-value">${data.paymentId}</div>
+        <div class="field-value">${data.paymentReference || data.paymentId || 'N/A'}</div>
       </div>
     </div>
 
@@ -76,17 +79,22 @@ export function generate80GReceiptHtml(data) {
 
     <div class="footer">
       <div>
-        <p>This is a computer-generated tax certificate requiring no physical signature.</p>
+        <p>This is a computer-generated receipt requiring no physical signature.</p>
         <p>Gujarat Education Department Alumni Endowment Initiative</p>
+        ${!isTaxExempt ? '<p style="color: #94a3b8; font-size: 11px;">*Note: This acknowledgement is issued for institutional records and does not claim Section 80G tax deductibility.</p>' : ''}
       </div>
       <div class="stamp">
-        VERIFIED 80G COMPLIANT
+        ${isTaxExempt ? 'VERIFIED 80G COMPLIANT' : 'OFFICIAL RECEIPT VERIFIED'}
       </div>
     </div>
   </div>
 </body>
 </html>
   `;
+}
+
+export function generate80GReceiptHtml(data) {
+  return generateReceiptHtml({ ...data, isTaxExempt: true });
 }
 
 function convertNumberToWords(amount) {
