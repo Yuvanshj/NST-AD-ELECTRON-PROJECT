@@ -37,6 +37,8 @@ export async function seedDatabaseIfEmpty() {
     establishedYear: 1948,
     website: 'https://ldce.ac.in',
     logoUrl: 'https://images.unsplash.com/photo-1562774053-701939374585?w=100&auto=format&fit=crop',
+    has80GExemption: true,
+    taxExemption80GNumber: 'CIT(E)/AHM/80G/2021-22/A-412',
   });
 
   const bvm = await College.create({
@@ -47,6 +49,8 @@ export async function seedDatabaseIfEmpty() {
     establishedYear: 1948,
     website: 'https://bvmengineering.ac.in',
     logoUrl: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=100&auto=format&fit=crop',
+    has80GExemption: true,
+    taxExemption80GNumber: 'CIT(E)/BRD/80G/2020-21/B-108',
   });
 
   const vgec = await College.create({
@@ -57,6 +61,8 @@ export async function seedDatabaseIfEmpty() {
     establishedYear: 1994,
     website: 'https://vgecg.ac.in',
     logoUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=100&auto=format&fit=crop',
+    has80GExemption: true,
+    taxExemption80GNumber: 'CIT(E)/AHM/80G/2022-23/V-019',
   });
 
   // 2. Users
@@ -64,7 +70,7 @@ export async function seedDatabaseIfEmpty() {
     collegeId: ldce._id,
     email: 'superadmin@gujarat.gov.in',
     phone: '+91 79 23250000',
-    passwordHash: hashPassword('admin123'),
+    passwordHash: hashPassword('Password@123'),
     role: 'SUPER_ADMIN',
     fullName: 'Dr. Jayeshbhai Patel (State Coordinator)',
   });
@@ -73,7 +79,7 @@ export async function seedDatabaseIfEmpty() {
     collegeId: ldce._id,
     email: 'alumni.admin@ldce.ac.in',
     phone: '+91 9825012345',
-    passwordHash: hashPassword('admin123'),
+    passwordHash: hashPassword('Password@123'),
     role: 'COLLEGE_ADMIN',
     fullName: 'Prof. Anitaben Shah (LDCE Alumni Dean)',
   });
@@ -82,7 +88,7 @@ export async function seedDatabaseIfEmpty() {
     collegeId: ldce._id,
     email: 'hardik.patel@alum.ldce.ac.in',
     phone: '+91 9909012345',
-    passwordHash: hashPassword('alumni123'),
+    passwordHash: hashPassword('Password@123'),
     role: 'ALUMNI',
     fullName: 'Hardik Patel',
   });
@@ -91,7 +97,7 @@ export async function seedDatabaseIfEmpty() {
     collegeId: ldce._id,
     email: 'priya.desai@alum.ldce.ac.in',
     phone: '+91 9879054321',
-    passwordHash: hashPassword('alumni123'),
+    passwordHash: hashPassword('Password@123'),
     role: 'ALUMNI',
     fullName: 'Priya Desai',
   });
@@ -100,7 +106,7 @@ export async function seedDatabaseIfEmpty() {
     collegeId: ldce._id,
     email: 'rahul.vyas@gmail.com',
     phone: '+91 9723045678',
-    passwordHash: hashPassword('alumni123'),
+    passwordHash: hashPassword('Password@123'),
     role: 'ALUMNI',
     fullName: 'Rahul Vyas',
   });
@@ -109,7 +115,7 @@ export async function seedDatabaseIfEmpty() {
     collegeId: ldce._id,
     email: 'meet.joshi@student.ldce.ac.in',
     phone: '+91 9428076543',
-    passwordHash: hashPassword('student123'),
+    passwordHash: hashPassword('Password@123'),
     role: 'STUDENT',
     fullName: 'Meet Joshi',
   });
