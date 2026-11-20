@@ -5,22 +5,31 @@ import { User } from '../models/User.js';
 import { Profile } from '../models/Profile.js';
 import { College } from '../models/College.js';
 import { Notification } from '../models/Notification.js';
+import { AuditLog } from '../models/AuditLog.js';
+import { authenticate, authorize, optionalAuthenticate } from '../middleware/auth.js';
 
 export const jobsRouter = express.Router();
 
-// Get jobs
-jobsRouter.get('/', async (req, res) => {
+/**
+ * GET /api/jobs
+ * List active job postings with referral tags
+ */
+jobsRouter.get('/', optionalAuthenticate, async (req, res) => {
   try {
-    const { currentUserId, canReferOnly, hasReferral, employmentType, query } = req.query;
+    const { currentUserId, canReferOnly, hasReferral, employmentType, query, collegeId } = req.query;
+    const effectiveUserId = req.user?._id || currentUserId;
 
     const filter = { status: 'ACTIVE' };
     if (canReferOnly === 'true' || hasReferral === 'true') filter.canRefer = true;
     if (employmentType) filter.employmentType = employmentType;
+    if (collegeId) filter.collegeId = collegeId;
+
     if (query) {
       filter.$or = [
         { title: new RegExp(query, 'i') },
         { company: new RegExp(query, 'i') },
         { skillsRequired: new RegExp(query, 'i') },
+        { location: new RegExp(query, 'i') },
       ];
     }
 
@@ -35,8 +44,8 @@ jobsRouter.get('/', async (req, res) => {
       jobs.map(async (j) => {
         const posterProfile = await Profile.findOne({ userId: j.posterId?._id });
         const appCount = applications.filter((a) => a.jobId.toString() === j._id.toString()).length;
-        const hasApplied = currentUserId
-          ? applications.some((a) => a.jobId.toString() === j._id.toString() && a.applicantId.toString() === currentUserId)
+        const hasApplied = effectiveUserId
+          ? applications.some((a) => a.jobId.toString() === j._id.toString() && a.applicantId.toString() === effectiveUserId.toString())
           : false;
 
         return {
@@ -75,12 +84,15 @@ jobsRouter.get('/', async (req, res) => {
 
     res.json({ success: true, count: formatted.length, jobs: formatted, data: formatted });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Create job with robust field normalization
-jobsRouter.post('/', async (req, res) => {
+/**
+ * POST /api/jobs
+ * Create job opening with alumni referral pledge
+ */
+jobsRouter.post('/', optionalAuthenticate, async (req, res) => {
   try {
     const {
       title,
@@ -92,12 +104,12 @@ jobsRouter.post('/', async (req, res) => {
       referralInstructions,
     } = req.body;
 
-    const posterId = req.body.posterId || req.body.postedBy || req.body.userId;
+    const posterId = req.user?._id || req.body.posterId || req.body.postedBy || req.body.userId;
     if (!posterId) {
-      return res.status(400).json({ message: 'posterId is required to post an opening' });
+      return res.status(400).json({ success: false, message: 'posterId is required to post an opening' });
     }
 
-    let collegeId = req.body.collegeId;
+    let collegeId = req.body.collegeId || req.user?.collegeId;
     if (!collegeId) {
       const user = await User.findById(posterId);
       collegeId = user?.collegeId;
@@ -148,17 +160,28 @@ jobsRouter.post('/', async (req, res) => {
       status: 'ACTIVE',
     });
 
+    await AuditLog.create({
+      collegeId,
+      userId: posterId,
+      action: 'JOB_POSTED',
+      category: 'CAREER',
+      details: { jobId: job._id, title: job.title, company: job.company },
+    });
+
     res.status(201).json({ success: true, job });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Apply for job / Request referral
-jobsRouter.post('/apply', async (req, res) => {
+/**
+ * POST /api/jobs/apply
+ * Apply for a job opening with referral request and resume URL
+ */
+jobsRouter.post('/apply', optionalAuthenticate, async (req, res) => {
   try {
     const { jobId } = req.body;
-    const applicantId = req.body.applicantId || req.body.userId;
+    const applicantId = req.user?._id || req.body.applicantId || req.body.userId;
     const resumeUrl = req.body.resumeUrl || 'https://drive.google.com/sample-resume.pdf';
     const coverNote = req.body.coverNote || req.body.coverLetter || '';
     const referralRequested =
@@ -169,12 +192,23 @@ jobsRouter.post('/apply', async (req, res) => {
         : true;
 
     if (!jobId || !applicantId) {
-      return res.status(400).json({ message: 'jobId and applicantId are required' });
+      return res.status(400).json({ success: false, message: 'jobId and applicantId are required' });
     }
 
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ success: false, message: 'Job posting not found' });
+    }
+
+    // Check application deadline
+    if (job.deadline && new Date(job.deadline) < new Date()) {
+      return res.status(400).json({ success: false, message: 'The application deadline for this job has passed.' });
+    }
+
+    // Prevent duplicate applications
     const existing = await JobApplication.findOne({ jobId, applicantId });
     if (existing) {
-      return res.status(400).json({ message: 'You have already applied for this role.' });
+      return res.status(400).json({ success: false, message: 'You have already applied for this role.' });
     }
 
     const app = await JobApplication.create({
@@ -186,30 +220,37 @@ jobsRouter.post('/apply', async (req, res) => {
       status: 'APPLIED',
     });
 
-    const job = await Job.findById(jobId);
     const applicant = await User.findById(applicantId);
 
-    if (job) {
-      await Notification.create({
-        userId: job.posterId,
-        title: 'New Referral Application',
-        message: `${applicant?.fullName || 'A candidate'} applied for "${job.title}" at ${job.company}${
-          referralRequested ? ' with an internal referral request' : ''
-        }.`,
-        type: 'JOB',
-      });
-    }
+    await Notification.create({
+      userId: job.posterId,
+      title: 'New Referral Application',
+      message: `${applicant?.fullName || 'A candidate'} applied for "${job.title}" at ${job.company}${
+        referralRequested ? ' requesting an alumni referral' : ''
+      }.`,
+      type: 'JOB',
+    });
 
     res.status(201).json({ success: true, application: app });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Get applicant's submitted applications
-jobsRouter.get('/applications/:userId', async (req, res) => {
+/**
+ * GET /api/jobs/applications/:userId
+ * Get submitted job applications for an applicant
+ */
+jobsRouter.get('/applications/:userId', optionalAuthenticate, async (req, res) => {
   try {
-    const apps = await JobApplication.find({ applicantId: req.params.userId })
+    const targetUserId = req.params.userId;
+
+    // Protection: only user themself or admin can view their applications
+    if (req.user && req.user._id.toString() !== targetUserId && req.user.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ success: false, message: 'Forbidden: Cannot view another user\'s applications.' });
+    }
+
+    const apps = await JobApplication.find({ applicantId: targetUserId })
       .populate({
         path: 'jobId',
         populate: [
@@ -232,18 +273,21 @@ jobsRouter.get('/applications/:userId', async (req, res) => {
 
     res.json({ success: true, count: formatted.length, applications: formatted });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Get poster's jobs and referral applicant pipeline
-jobsRouter.get('/poster/:posterId', async (req, res) => {
+/**
+ * GET /api/jobs/poster/:posterId
+ * Get applicant pipeline for job poster
+ */
+jobsRouter.get('/poster/:posterId', optionalAuthenticate, async (req, res) => {
   try {
     const jobs = await Job.find({ posterId: req.params.posterId }).sort({ createdAt: -1 });
 
     const result = await Promise.all(
       jobs.map(async (job) => {
-        const apps = await JobApplication.find({ jobId: job._id }).populate('applicantId', 'fullName email');
+        const apps = await JobApplication.find({ jobId: job._id }).populate('applicantId', 'fullName email phone');
         const formattedApps = await Promise.all(
           apps.map(async (a) => {
             const prof = await Profile.findOne({ userId: a.applicantId?._id });
@@ -254,6 +298,7 @@ jobsRouter.get('/poster/:posterId', async (req, res) => {
               applicantId: a.applicantId?._id,
               applicantName: a.applicantId?.fullName,
               applicantEmail: a.applicantId?.email,
+              applicantPhone: a.applicantId?.phone,
               applicantBatch: prof?.batch,
               applicantBranch: prof?.branch,
               resumeUrl: a.resumeUrl,
@@ -270,16 +315,21 @@ jobsRouter.get('/poster/:posterId', async (req, res) => {
 
     res.json({ success: true, postings: result });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Update application status (e.g. UNDER_REVIEW, REFERRED, SHORTLISTED, REJECTED)
-jobsRouter.put('/application/:id/status', async (req, res) => {
+/**
+ * PUT /api/jobs/application/:id/status
+ * Update referral status (UNDER_REVIEW, REFERRED, SHORTLISTED, REJECTED)
+ */
+jobsRouter.put('/application/:id/status', optionalAuthenticate, async (req, res) => {
   try {
     const { status } = req.body;
+    if (!status) return res.status(400).json({ success: false, message: 'Status is required' });
+
     const app = await JobApplication.findByIdAndUpdate(req.params.id, { status }, { new: true });
-    if (!app) return res.status(404).json({ message: 'Application not found' });
+    if (!app) return res.status(404).json({ success: false, message: 'Application not found' });
 
     await Notification.create({
       userId: app.applicantId,
@@ -290,7 +340,7 @@ jobsRouter.put('/application/:id/status', async (req, res) => {
 
     res.json({ success: true, application: app });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
