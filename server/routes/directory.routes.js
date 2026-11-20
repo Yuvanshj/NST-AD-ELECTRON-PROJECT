@@ -4,14 +4,32 @@ import { Profile } from '../models/Profile.js';
 import { College } from '../models/College.js';
 import { Connection } from '../models/Connection.js';
 import { Notification } from '../models/Notification.js';
+import { optionalAuthenticate } from '../middleware/auth.js';
 
 export const directoryRouter = express.Router();
 
-// Search / list alumni
+/**
+ * GET /api/directory and /api/directory/search
+ * Search and filter alumni across Gujarat colleges
+ */
 const handleDirectorySearch = async (req, res) => {
   try {
-    const { currentUserId, query, q, city, branch, batch, batchYear, collegeId, isMentor, verifiedOnly } = req.query;
+    const {
+      currentUserId,
+      query,
+      q,
+      city,
+      branch,
+      batch,
+      batchYear,
+      collegeId,
+      isMentor,
+      verifiedOnly,
+      limit = 50,
+      skip = 0,
+    } = req.query;
 
+    const effectiveUserId = req.user?._id || currentUserId;
     const searchTerm = query || q;
     const batchVal = batch || batchYear;
 
@@ -25,21 +43,23 @@ const handleDirectorySearch = async (req, res) => {
     const profiles = await Profile.find(profileFilter)
       .populate({
         path: 'userId',
-        select: 'fullName email phone role collegeId',
+        select: 'fullName email phone role collegeId isActive',
         populate: { path: 'collegeId', select: 'name code city' },
       })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(Number(skip))
+      .limit(Number(limit));
 
-    const connections = currentUserId
+    const connections = effectiveUserId
       ? await Connection.find({
-          $or: [{ requesterId: currentUserId }, { receiverId: currentUserId }],
+          $or: [{ requesterId: effectiveUserId }, { receiverId: effectiveUserId }],
         })
       : [];
 
     let results = [];
 
     for (const prof of profiles) {
-      if (!prof.userId) continue;
+      if (!prof.userId || !prof.userId.isActive) continue;
       const user = prof.userId;
       if (user.role !== 'ALUMNI' && user.role !== 'COLLEGE_ADMIN') continue;
 
@@ -52,20 +72,31 @@ const handleDirectorySearch = async (req, res) => {
         const matchesName = (user.fullName || '').toLowerCase().includes(term);
         const matchesCompany = (prof.currentCompany || '').toLowerCase().includes(term);
         const matchesSkill = prof.skills?.some((s) => s.toLowerCase().includes(term));
-        if (!matchesName && !matchesCompany && !matchesSkill) continue;
+        const matchesBranch = (prof.branch || '').toLowerCase().includes(term);
+        if (!matchesName && !matchesCompany && !matchesSkill && !matchesBranch) continue;
       }
 
       let connectionStatus = 'NONE';
-      if (currentUserId && user._id.toString() === currentUserId.toString()) {
+      let connectionId = null;
+
+      if (effectiveUserId && user._id.toString() === effectiveUserId.toString()) {
         connectionStatus = 'SELF';
-      } else if (currentUserId) {
+      } else if (effectiveUserId) {
         const conn = connections.find(
           (c) =>
-            (c.requesterId.toString() === currentUserId && c.receiverId.toString() === user._id.toString()) ||
-            (c.requesterId.toString() === user._id.toString() && c.receiverId.toString() === currentUserId)
+            (c.requesterId.toString() === effectiveUserId.toString() && c.receiverId.toString() === user._id.toString()) ||
+            (c.requesterId.toString() === user._id.toString() && c.receiverId.toString() === effectiveUserId.toString())
         );
-        if (conn) connectionStatus = conn.status;
+        if (conn) {
+          connectionStatus = conn.status;
+          connectionId = conn._id;
+        }
       }
+
+      // Check privacy settings
+      const isConnected = connectionStatus === 'ACCEPTED';
+      const hideEmail = prof.privacy?.hideEmail && !isConnected && connectionStatus !== 'SELF';
+      const hidePhone = prof.privacy?.hidePhone && !isConnected && connectionStatus !== 'SELF';
 
       results.push({
         _id: user._id,
@@ -73,8 +104,8 @@ const handleDirectorySearch = async (req, res) => {
         userId: user._id,
         fullName: user.fullName,
         name: user.fullName,
-        email: prof.privacy?.hideEmail ? 'Hidden by user' : user.email,
-        phone: prof.privacy?.hidePhone ? 'Hidden by user' : user.phone,
+        email: hideEmail ? 'Protected by user privacy settings' : user.email,
+        phone: hidePhone ? 'Protected by user privacy settings' : user.phone,
         role: user.role,
         collegeId: user.collegeId,
         collegeName: user.collegeId?.name,
@@ -93,23 +124,26 @@ const handleDirectorySearch = async (req, res) => {
           headline: prof.headline || `${prof.designation || 'Alumnus'} at ${prof.currentCompany || 'Gujarat Tech'}`,
         },
         connectionStatus,
+        connectionId,
       });
     }
 
     res.json({ success: true, count: results.length, alumni: results, data: results });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-directoryRouter.get('/search', handleDirectorySearch);
-directoryRouter.get('/', handleDirectorySearch);
+directoryRouter.get('/search', optionalAuthenticate, handleDirectorySearch);
+directoryRouter.get('/', optionalAuthenticate, handleDirectorySearch);
 
-// Stats
+/**
+ * GET /api/directory/stats
+ */
 directoryRouter.get('/stats', async (req, res) => {
   try {
     const { collegeId } = req.query;
-    const filter = { role: 'ALUMNI' };
+    const filter = { role: 'ALUMNI', isActive: true };
     if (collegeId) filter.collegeId = collegeId;
 
     const totalAlumni = await User.countDocuments(filter);
@@ -125,15 +159,27 @@ directoryRouter.get('/stats', async (req, res) => {
       },
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Connect
-directoryRouter.post('/connect', async (req, res) => {
+/**
+ * POST /api/directory/connect
+ * Send a networking connection request
+ */
+directoryRouter.post('/connect', optionalAuthenticate, async (req, res) => {
   try {
-    const { requesterId, recipientId, receiverId } = req.body;
-    const targetId = recipientId || receiverId;
+    const requesterId = req.user?._id || req.body.requesterId;
+    const targetId = req.body.recipientId || req.body.receiverId;
+
+    if (!requesterId || !targetId) {
+      return res.status(400).json({ success: false, message: 'Requester ID and recipient ID are required.' });
+    }
+
+    // Prevent connecting to oneself
+    if (requesterId.toString() === targetId.toString()) {
+      return res.status(400).json({ success: false, message: 'You cannot send a connection request to yourself.' });
+    }
 
     const existing = await Connection.findOne({
       $or: [
@@ -152,28 +198,86 @@ directoryRouter.post('/connect', async (req, res) => {
       status: 'PENDING',
     });
 
+    const requester = await User.findById(requesterId);
+
     await Notification.create({
       userId: targetId,
       title: 'New Connection Request',
-      message: 'A fellow Gujarat alumnus requested to connect with you.',
+      message: `${requester?.fullName || 'A fellow alumnus'} sent you a connection request.`,
       type: 'NETWORKING',
     });
 
     res.json({ success: true, connection: conn });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Connections list
-directoryRouter.get('/connections/:userId', async (req, res) => {
+/**
+ * PUT /api/directory/connection/:id/accept
+ */
+directoryRouter.put('/connection/:id/accept', optionalAuthenticate, async (req, res) => {
+  try {
+    const conn = await Connection.findByIdAndUpdate(
+      req.params.id,
+      { status: 'ACCEPTED' },
+      { new: true }
+    );
+    if (!conn) return res.status(404).json({ success: false, message: 'Connection not found' });
+
+    await Notification.create({
+      userId: conn.requesterId,
+      title: 'Connection Accepted!',
+      message: 'Your connection request was accepted.',
+      type: 'NETWORKING',
+    });
+
+    res.json({ success: true, connection: conn });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/**
+ * PUT /api/directory/connection/:id/reject
+ */
+directoryRouter.put('/connection/:id/reject', optionalAuthenticate, async (req, res) => {
+  try {
+    const conn = await Connection.findByIdAndUpdate(
+      req.params.id,
+      { status: 'REJECTED' },
+      { new: true }
+    );
+    if (!conn) return res.status(404).json({ success: false, message: 'Connection not found' });
+    res.json({ success: true, connection: conn });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/**
+ * DELETE /api/directory/connection/:id
+ */
+directoryRouter.delete('/connection/:id', optionalAuthenticate, async (req, res) => {
+  try {
+    await Connection.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Connection removed.' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/**
+ * GET /api/directory/connections/:userId
+ */
+directoryRouter.get('/connections/:userId', optionalAuthenticate, async (req, res) => {
   try {
     const conns = await Connection.find({
       $or: [{ requesterId: req.params.userId }, { receiverId: req.params.userId }],
-    }).populate('requesterId receiverId', 'fullName email role');
+    }).populate('requesterId receiverId', 'fullName email role collegeId');
     res.json({ success: true, connections: conns });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
