@@ -3,31 +3,45 @@ import { User } from '../models/User.js';
 import { Profile } from '../models/Profile.js';
 import { VerificationRequest } from '../models/VerificationRequest.js';
 import { Donation } from '../models/Donation.js';
-import { Campaign } from '../models/Campaign.js';
 import { Job } from '../models/Job.js';
 import { JobApplication } from '../models/JobApplication.js';
 import { Event } from '../models/Event.js';
 import { EventRsvp } from '../models/EventRsvp.js';
 import { College } from '../models/College.js';
+import { optionalAuthenticate } from '../middleware/auth.js';
 
 export const analyticsRouter = express.Router();
 
-analyticsRouter.get('/dashboard', async (req, res) => {
+/**
+ * GET /api/analytics/dashboard
+ * Aggregated administrative metrics with strict tenant scoping for college administrators
+ */
+analyticsRouter.get('/dashboard', optionalAuthenticate, async (req, res) => {
   try {
-    const { collegeId } = req.query;
-    const userFilter = { role: 'ALUMNI' };
+    let collegeId = req.query.collegeId;
+
+    // Enforce tenant boundary: College Admin only sees their own institution's metrics
+    if (req.user && req.user.role === 'COLLEGE_ADMIN') {
+      collegeId = req.user.collegeId?._id || req.user.collegeId;
+    }
+
+    const userFilter = { role: 'ALUMNI', isActive: true };
     if (collegeId) userFilter.collegeId = collegeId;
 
     const alumniUsers = await User.find(userFilter);
-    const studentUsers = await User.find({ role: 'STUDENT', ...(collegeId ? { collegeId } : {}) });
+    const studentUsers = await User.find({ role: 'STUDENT', isActive: true, ...(collegeId ? { collegeId } : {}) });
     const alumniIds = alumniUsers.map((u) => u._id);
 
     const profiles = await Profile.find({ userId: { $in: alumniIds } });
     const verifiedAlumni = profiles.filter((p) => p.verificationStatus === 'VERIFIED').length;
-    const pendingVerifications = await VerificationRequest.countDocuments({ status: 'PENDING', ...(collegeId ? { collegeId } : {}) });
+    const pendingVerifications = await VerificationRequest.countDocuments({
+      status: 'PENDING',
+      ...(collegeId ? { collegeId } : {}),
+    });
     const activeMentors = profiles.filter((p) => p.isMentor && p.verificationStatus === 'VERIFIED').length;
 
-    const donationFilter = collegeId ? { collegeId } : {};
+    const donationFilter = { paymentStatus: 'PAID' };
+    if (collegeId) donationFilter.collegeId = collegeId;
     const donations = await Donation.find(donationFilter);
     const totalRaised = donations.reduce((sum, d) => sum + (d.amount || 0), 0);
     const avgDonation = donations.length > 0 ? Math.round(totalRaised / donations.length) : 0;
@@ -39,10 +53,11 @@ analyticsRouter.get('/dashboard', async (req, res) => {
 
     const eventFilter = collegeId ? { collegeId } : {};
     const events = await Event.find(eventFilter);
-    const rsvps = await EventRsvp.find();
+    const eventIds = events.map((e) => e._id);
+    const rsvps = await EventRsvp.find({ eventId: { $in: eventIds } });
     const checkedInCount = rsvps.filter((r) => r.status === 'CHECKED_IN').length;
 
-    // Distributions
+    // Demographic distributions
     const cityCounts = {};
     const branchCounts = {};
     const industryCounts = {};
@@ -81,7 +96,7 @@ analyticsRouter.get('/dashboard', async (req, res) => {
         totalJobApplications,
         totalEvents: events.length,
         totalEventRegistrations: rsvps.length,
-        eventAttendanceRate: rsvps.length > 0 ? Math.round((checkedInCount / rsvps.length) * 100) : 0,
+        eventAttendanceRate: rsvps.length > 0 ? Math.round((checkedInCount / (rsvps.length || 1)) * 100) : 0,
       },
       cityDistribution: Object.entries(cityCounts).map(([city, count]) => ({ city, count })).sort((a, b) => b.count - a.count),
       branchDistribution: Object.entries(branchCounts).map(([branch, count]) => ({ branch, count })).sort((a, b) => b.count - a.count),
@@ -89,23 +104,26 @@ analyticsRouter.get('/dashboard', async (req, res) => {
       batchDistribution: Object.entries(batchCounts).map(([batch, count]) => ({ batch: Number(batch), count })).sort((a, b) => a.batch - b.batch),
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// College Comparison Benchmarks
-analyticsRouter.get('/colleges-comparison', async (req, res) => {
+/**
+ * GET /api/analytics/colleges-comparison
+ * Cross-college benchmark metrics for State Administrators
+ */
+analyticsRouter.get('/colleges-comparison', optionalAuthenticate, async (req, res) => {
   try {
-    const colleges = await College.find();
+    const colleges = await College.find({ isActive: true });
     const comparison = await Promise.all(
       colleges.map(async (c) => {
-        const alumniCount = await User.countDocuments({ collegeId: c._id, role: 'ALUMNI' });
+        const alumniCount = await User.countDocuments({ collegeId: c._id, role: 'ALUMNI', isActive: true });
         const users = await User.find({ collegeId: c._id });
         const userIds = users.map((u) => u._id);
         const profiles = await Profile.find({ userId: { $in: userIds } });
         const verified = profiles.filter((p) => p.verificationStatus === 'VERIFIED').length;
         const mentors = profiles.filter((p) => p.isMentor).length;
-        const donations = await Donation.find({ collegeId: c._id });
+        const donations = await Donation.find({ collegeId: c._id, paymentStatus: 'PAID' });
         const raised = donations.reduce((sum, d) => sum + (d.amount || 0), 0);
 
         return {
@@ -113,17 +131,17 @@ analyticsRouter.get('/colleges-comparison', async (req, res) => {
           collegeName: c.name,
           code: c.code,
           city: c.city,
-          alumniCount: alumniCount || 350,
-          verifiedRate: `${alumniCount > 0 ? Math.round((verified / alumniCount) * 100) : 92}%`,
-          donationsRaised: raised || 450000,
-          mentorCount: mentors || 45,
+          alumniCount,
+          verifiedRate: `${alumniCount > 0 ? Math.round((verified / alumniCount) * 100) : 0}%`,
+          donationsRaised: raised,
+          mentorCount: mentors,
         };
       })
     );
 
-    res.json({ success: true, comparison });
+    res.json({ success: true, count: comparison.length, comparison });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
