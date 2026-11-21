@@ -20,6 +20,7 @@ import { surveysRouter as surveysRoutes } from './routes/surveys.routes.js';
 import { analyticsRouter as analyticsRoutes } from './routes/analytics.routes.js';
 import auditRoutes from './routes/audit.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import { uploadRouter } from './routes/upload.routes.js';
 
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use('/api/surveys', surveysRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/upload', uploadRouter);
 
 // Serve static frontend in production
 if (process.env.NODE_ENV === 'production') {

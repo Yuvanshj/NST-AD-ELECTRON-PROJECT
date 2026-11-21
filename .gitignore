@@ -35,3 +35,7 @@ dist-electron/
 # Operating System Files
 .DS_Store
 Thumbs.db
+
+# User Uploads
+uploads/*
+!uploads/.gitkeep
