@@ -6,17 +6,16 @@ import {
   Bell,
   CheckCircle2,
   Clock,
-  ShieldCheck,
   Globe,
+  LogOut,
+  LogIn,
   User,
-  ChevronDown,
-  Building2,
-  GraduationCap,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function Navbar() {
-  const { currentUser, activePersona, switchPersona } = useAuth();
-  const { language, toggleLanguage, t } = useLanguage();
+  const { currentUser, logout, setShowAuthModal, setAuthModalMode, quickLoginPersona } = useAuth();
+  const { toggleLanguage, t } = useLanguage();
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -24,6 +23,9 @@ export default function Navbar() {
   useEffect(() => {
     if (currentUser?._id) {
       loadNotifications();
+    } else {
+      setNotifications([]);
+      setUnreadCount(0);
     }
   }, [currentUser]);
 
@@ -131,29 +133,32 @@ export default function Navbar() {
 
       {/* Right: Controls, Role Switcher, Language & Profile */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        {/* Hackathon Role Simulator */}
+        {/* Evaluator Persona Switcher */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-            {t('switchRole')}:
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', fontWeight: 500 }}>
+            Test Persona:
           </span>
           <select
             className="form-select"
-            value={activePersona}
-            onChange={(e) => switchPersona(e.target.value)}
+            value={currentUser?.role || ''}
+            onChange={(e) => {
+              if (e.target.value) quickLoginPersona(e.target.value);
+            }}
             style={{
-              padding: '0.35rem 0.75rem',
-              fontSize: '0.8rem',
+              padding: '0.35rem 0.65rem',
+              fontSize: '0.75rem',
               width: 'auto',
               cursor: 'pointer',
               borderColor: 'rgba(59, 130, 246, 0.4)',
               background: '#131e38',
             }}
           >
-            <option value="ALUMNI">Hardik Patel (Alumnus - TCS)</option>
-            <option value="STUDENT">Meet Joshi (Student - LDCE)</option>
-            <option value="COLLEGE_ADMIN">Prof. Shah (Registrar Admin)</option>
-            <option value="STATE_DIRECTOR">Dr. Trivedi (State Director)</option>
-            <option value="PENDING_ALUMNI">Rahul Vyas (Pending Verification)</option>
+            <option value="" disabled>Switch Persona</option>
+            <option value="ALUMNI">Hardik Patel (Alumnus)</option>
+            <option value="STUDENT">Meet Joshi (Student)</option>
+            <option value="COLLEGE_ADMIN">Prof. Shah (Registrar)</option>
+            <option value="STATE_DIRECTOR">Dr. Patel (State Dir)</option>
+            <option value="PENDING_ALUMNI">Rahul Vyas (Pending)</option>
           </select>
         </div>
 
@@ -169,142 +174,178 @@ export default function Navbar() {
         </button>
 
         {/* Notifications */}
-        <div style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="btn btn-secondary btn-sm"
-            style={{ position: 'relative', padding: '0.45rem' }}
-          >
-            <Bell size={16} />
-            {unreadCount > 0 && (
-              <span
+        {currentUser && (
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="btn btn-secondary btn-sm"
+              style={{ position: 'relative', padding: '0.45rem' }}
+            >
+              <Bell size={16} />
+              {unreadCount > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: -4,
+                    right: -4,
+                    background: '#ef4444',
+                    color: '#fff',
+                    fontSize: '0.65rem',
+                    fontWeight: 700,
+                    width: 18,
+                    height: 18,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {showNotifications && (
+              <div
+                className="glass-panel animate-fade-in"
                 style={{
                   position: 'absolute',
-                  top: -4,
-                  right: -4,
-                  background: '#ef4444',
-                  color: '#fff',
-                  fontSize: '0.65rem',
-                  fontWeight: 700,
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  top: 42,
+                  right: 0,
+                  width: 320,
+                  maxHeight: 400,
+                  overflowY: 'auto',
+                  padding: '1rem',
+                  zIndex: 200,
+                  background: '#0d1527',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
                 }}
               >
-                {unreadCount}
-              </span>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '0.75rem',
+                    borderBottom: '1px solid var(--border-color)',
+                    paddingBottom: '0.5rem',
+                  }}
+                >
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Notifications</span>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllRead}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--primary)',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                {notifications.length === 0 ? (
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                    No new notifications
+                  </p>
+                ) : (
+                  notifications.map((n) => (
+                    <div
+                      key={n._id}
+                      style={{
+                        padding: '0.6rem 0.5rem',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                        opacity: n.isRead ? 0.6 : 1,
+                      }}
+                    >
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{n.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{n.message}</div>
+                    </div>
+                  ))
+                )}
+              </div>
             )}
-          </button>
+          </div>
+        )}
 
-          {showNotifications && (
+        {/* Current User Pill or Sign In Button */}
+        {currentUser ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <div
-              className="glass-panel animate-fade-in"
               style={{
-                position: 'absolute',
-                top: 42,
-                right: 0,
-                width: 320,
-                maxHeight: 400,
-                overflowY: 'auto',
-                padding: '1rem',
-                zIndex: 200,
-                background: '#0d1527',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.65rem',
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '0.35rem 0.8rem',
+                borderRadius: '9999px',
+                border: '1px solid var(--border-color)',
               }}
             >
               <div
                 style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  background: '#2563eb',
                   display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '0.75rem',
-                  borderBottom: '1px solid var(--border-color)',
-                  paddingBottom: '0.5rem',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
                 }}
               >
-                <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Notifications</span>
-                {unreadCount > 0 && (
-                  <button
-                    onClick={handleMarkAllRead}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--primary)',
-                      fontSize: '0.75rem',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Mark all read
-                  </button>
-                )}
+                {currentUser.name?.charAt(0) || 'U'}
               </div>
-              {notifications.length === 0 ? (
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                  No new notifications
-                </p>
-              ) : (
-                notifications.map((n) => (
-                  <div
-                    key={n._id}
-                    style={{
-                      padding: '0.6rem 0.5rem',
-                      borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-                      opacity: n.isRead ? 0.6 : 1,
-                    }}
-                  >
-                    <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{n.title}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{n.message}</div>
-                  </div>
-                ))
-              )}
+              <div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  {currentUser.name}
+                  {currentUser.verificationStatus === 'VERIFIED' ? (
+                    <CheckCircle2 size={13} color="#10b981" title="GTU Verified" />
+                  ) : (
+                    <Clock size={13} color="#f59e0b" title="Pending Verification" />
+                  )}
+                </div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                  {currentUser.role} • {currentUser.collegeId?.code || 'GTU'}
+                </div>
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* Current User Pill */}
-        {currentUser && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.65rem',
-              background: 'rgba(255, 255, 255, 0.05)',
-              padding: '0.35rem 0.8rem',
-              borderRadius: '9999px',
-              border: '1px solid var(--border-color)',
-            }}
-          >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                background: '#2563eb',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: '0.75rem',
-              }}
+            <button
+              onClick={logout}
+              className="btn btn-secondary btn-sm"
+              title="Sign Out"
+              style={{ padding: '0.45rem', color: '#f87171' }}
             >
-              {currentUser.name?.charAt(0) || 'U'}
-            </div>
-            <div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                {currentUser.name}
-                {currentUser.verificationStatus === 'VERIFIED' ? (
-                  <CheckCircle2 size={13} color="#10b981" title="GTU Verified" />
-                ) : (
-                  <Clock size={13} color="#f59e0b" title="Pending Verification" />
-                )}
-              </div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                {currentUser.role} • {currentUser.collegeId?.code || 'GTU'}
-              </div>
-            </div>
+              <LogOut size={15} />
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => {
+                setAuthModalMode('login');
+                setShowAuthModal(true);
+              }}
+              className="btn btn-primary btn-sm"
+              style={{ gap: '0.35rem' }}
+            >
+              <LogIn size={14} />
+              <span>Sign In</span>
+            </button>
+            <button
+              onClick={() => {
+                setAuthModalMode('register');
+                setShowAuthModal(true);
+              }}
+              className="btn btn-secondary btn-sm"
+            >
+              Register
+            </button>
           </div>
         )}
       </div>

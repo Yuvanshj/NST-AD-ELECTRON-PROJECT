@@ -15,11 +15,13 @@ import {
   BarChart3,
   TrendingUp,
   FileCode2,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 
 export default function Sidebar({ activeTab, setActiveTab }) {
   const { t } = useLanguage();
-  const { currentUser } = useAuth();
+  const { currentUser, logout, setShowAuthModal, setAuthModalMode } = useAuth();
 
   const isRegistrarOrDirector =
     currentUser?.role === 'COLLEGE_ADMIN' ||
@@ -206,6 +208,32 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             })}
           </div>
         ))}
+      </div>
+
+      {/* Auth Action */}
+      <div style={{ padding: '0.75rem 1rem', borderTop: '1px solid var(--border-color)' }}>
+        {currentUser ? (
+          <button
+            onClick={logout}
+            className="btn btn-secondary btn-sm"
+            style={{ width: '100%', justifyContent: 'center', gap: '0.5rem', color: '#f87171' }}
+          >
+            <LogOut size={14} />
+            <span>Sign Out</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              setAuthModalMode('login');
+              setShowAuthModal(true);
+            }}
+            className="btn btn-primary btn-sm"
+            style={{ width: '100%', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            <LogIn size={14} />
+            <span>Sign In / Register</span>
+          </button>
+        )}
       </div>
 
       {/* Gujarat Dept Footer */}

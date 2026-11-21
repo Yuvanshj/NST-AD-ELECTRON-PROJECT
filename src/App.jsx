@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext.jsx';
 import { LanguageProvider } from './contexts/LanguageContext.jsx';
 import Navbar from './components/Navbar.jsx';
 import Sidebar from './components/Sidebar.jsx';
+import AuthModal from './components/AuthModal.jsx';
 
 // Modules
 import ProfileModule from './components/modules/ProfileModule.jsx';
@@ -68,6 +69,7 @@ function AppContent() {
         <Navbar />
         {renderModule()}
       </div>
+      <AuthModal />
     </div>
   );
 }
