@@ -7,10 +7,33 @@ const API_BASE =
   (typeof window !== 'undefined' && window.__API_BASE__) ||
   (typeof window !== 'undefined' && window.location.protocol === 'file:' ? 'http://localhost:5001/api' : '/api');
 
+let authToken = null;
+
+export function setAuthToken(token) {
+  authToken = token;
+  if (typeof window !== 'undefined') {
+    if (token) {
+      sessionStorage.setItem('mahasetu_token', token);
+    } else {
+      sessionStorage.removeItem('mahasetu_token');
+    }
+  }
+}
+
+export function getAuthToken() {
+  if (!authToken && typeof window !== 'undefined') {
+    authToken = sessionStorage.getItem('mahasetu_token');
+  }
+  return authToken;
+}
+
 async function request(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
+  const token = getAuthToken();
+
   const headers = {
     'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
@@ -32,14 +55,25 @@ async function request(endpoint, options = {}) {
 export const api = {
   // Auth
   auth: {
-    sendOtp: (email) => request('/auth/send-otp', { method: 'POST', body: JSON.stringify({ email }) }),
-    verifyOtp: (email, otp) => request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp }) }),
-    login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
-    register: (payload) => request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
+    sendOtp: (email, purpose = 'LOGIN') =>
+      request('/auth/otp/request', { method: 'POST', body: JSON.stringify({ email, purpose }) }),
+    verifyOtp: (email, otp) =>
+      request('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ email, otp }) }),
+    login: (email, password) =>
+      request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+    register: (payload) =>
+      request('/auth/register', { method: 'POST', body: JSON.stringify(payload) }),
+    getMe: () => request('/auth/me'),
+    logout: () => request('/auth/logout', { method: 'POST' }),
+    forgotPassword: (email) =>
+      request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+    resetPassword: (payload) =>
+      request('/auth/reset-password', { method: 'POST', body: JSON.stringify(payload) }),
     getProfile: (userId) => request(`/auth/profile/${userId}`),
-    updateProfile: (userId, payload) => request(`/auth/profile/${userId}`, { method: 'PUT', body: JSON.stringify(payload) }),
-    bulkRegister: (payload) => request('/auth/bulk-register', { method: 'POST', body: JSON.stringify(payload) }),
+    updateProfile: (userId, payload) =>
+      request(`/auth/profile/${userId}`, { method: 'PUT', body: JSON.stringify(payload) }),
     getColleges: () => request('/auth/colleges'),
+    getUsers: () => request('/auth/users'),
   },
 
   // Verification Queue
@@ -77,11 +111,21 @@ export const api = {
     connect: (requesterId, recipientId) =>
       request('/directory/connect', { method: 'POST', body: JSON.stringify({ requesterId, recipientId }) }),
     getConnections: (userId) => request(`/directory/connections/${userId}`),
+    acceptConnection: (connectionId) =>
+      request(`/directory/connection/${connectionId}/accept`, { method: 'PUT' }),
+    rejectConnection: (connectionId) =>
+      request(`/directory/connection/${connectionId}/reject`, { method: 'PUT' }),
+    removeConnection: (connectionId) =>
+      request(`/directory/connection/${connectionId}`, { method: 'DELETE' }),
   },
 
   // Mentorship
   mentorship: {
     getSmartMatches: (studentId) => request(`/mentorship/smart-matches/${studentId}`),
+    getMentors: (filters = {}) => {
+      const params = new URLSearchParams(filters);
+      return request(`/mentorship/mentors?${params.toString()}`);
+    },
     requestMatch: (payload) => request('/mentorship/request', { method: 'POST', body: JSON.stringify(payload) }),
     getRequests: (userId) => request(`/mentorship/requests/${userId}`),
     respond: (requestId, status, responseNote) =>
@@ -202,5 +246,10 @@ export const api = {
     getAll: (userId) => request(`/notifications/${userId}`),
     markAsRead: (id) => request(`/notifications/${id}/read`, { method: 'POST' }),
     markAllRead: (userId) => request(`/notifications/read-all/${userId}`, { method: 'POST' }),
+  },
+
+  // File Upload
+  upload: {
+    uploadFile: (payload) => request('/upload', { method: 'POST', body: JSON.stringify(payload) }),
   },
 };
