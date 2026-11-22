@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "MahaSetu",
+    "slug": "mahasetu-gujarat-alumni",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0f1d"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "gov.gujarat.education.mahasetu",
+      "infoPlist": {
+        "NSCameraUsageDescription": "MahaSetu requires camera access to scan event QR tickets.",
+        "NSPhotoLibraryUsageDescription": "MahaSetu requires photo library access to upload profile pictures and degree proof documents."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0f1d"
+      },
+      "package": "gov.gujarat.education.mahasetu",
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "mahasetu",
+    "extra": {
+      "apiBaseUrl": "http://10.0.2.2:5001/api",
+      "apiBaseUrlIos": "http://localhost:5001/api"
+    }
+  }
+}
