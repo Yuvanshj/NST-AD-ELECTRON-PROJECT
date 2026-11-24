@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { connectDB } from './config/db.js';
 import { seedDatabase } from './seed/seedData.js';
@@ -61,11 +62,14 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/upload', uploadRouter);
 
-// Serve static frontend in production
-if (process.env.NODE_ENV === 'production') {
-  const distPath = path.resolve(__dirname, '../dist');
+// Serve static frontend in production or when dist build exists
+const distPath = path.resolve(__dirname, '../dist');
+if (process.env.NODE_ENV === 'production' || fs.existsSync(path.join(distPath, 'index.html'))) {
   app.use(express.static(distPath));
-  app.get('*', (req, res) => {
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
     res.sendFile(path.resolve(distPath, 'index.html'));
   });
 }

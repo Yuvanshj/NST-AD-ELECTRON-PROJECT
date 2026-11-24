@@ -58,22 +58,41 @@ async function ensureBackendRunning() {
   }
 
   console.log('[Electron] Starting backend server (server/index.js)...');
-  const serverScript = path.join(projectRoot, 'server', 'index.js');
-  
-  backendProcess = spawn(process.execPath, [serverScript], {
-    cwd: projectRoot,
-    env: { ...process.env, PORT: '5001' },
-    stdio: 'inherit',
-  });
+  let serverScript = path.join(projectRoot, 'server', 'index.js');
+  let execCwd = projectRoot;
 
-  backendProcess.on('error', (err) => {
-    console.error('[Electron] Failed to spawn backend process:', err);
-  });
+  if (app.isPackaged) {
+    const unpackedScript = path.join(process.resourcesPath, 'app.asar.unpacked', 'server', 'index.js');
+    if (fs.existsSync(unpackedScript)) {
+      serverScript = unpackedScript;
+      execCwd = path.join(process.resourcesPath, 'app.asar.unpacked');
+    }
+  }
 
-  backendProcess.on('exit', (code, signal) => {
-    console.log(`[Electron] Backend process exited with code ${code} / signal ${signal}`);
-    backendProcess = null;
-  });
+  try {
+    backendProcess = spawn(process.execPath, [serverScript], {
+      cwd: execCwd,
+      env: { ...process.env, PORT: '5001', ELECTRON_RUN_AS_NODE: '1' },
+      stdio: 'inherit',
+    });
+
+    backendProcess.on('error', (err) => {
+      console.error('[Electron] Failed to spawn backend process:', err);
+    });
+
+    backendProcess.on('exit', (code, signal) => {
+      console.log(`[Electron] Backend process exited with code ${code} / signal ${signal}`);
+      backendProcess = null;
+    });
+  } catch (err) {
+    console.warn('[Electron] Backend spawn failed, attempting in-process import:', err);
+    try {
+      await import('../server/index.js');
+      return true;
+    } catch (importErr) {
+      console.error('[Electron] In-process fallback error:', importErr);
+    }
+  }
 
   // Wait up to 15 seconds for backend to become ready
   const start = Date.now();

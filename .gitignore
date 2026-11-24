@@ -24,6 +24,9 @@ node_modules/
 # Build artifacts
 dist/
 dist-electron/
+release/
+*.dmg
+*.blockmap
 
 # Environment files
 .env
