@@ -57,40 +57,30 @@ async function ensureBackendRunning() {
     return true;
   }
 
-  console.log('[Electron] Starting backend server (server/index.js)...');
-  let serverScript = path.join(projectRoot, 'server', 'index.js');
-  let execCwd = projectRoot;
-
-  if (app.isPackaged) {
-    const unpackedScript = path.join(process.resourcesPath, 'app.asar.unpacked', 'server', 'index.js');
-    if (fs.existsSync(unpackedScript)) {
-      serverScript = unpackedScript;
-      execCwd = path.join(process.resourcesPath, 'app.asar.unpacked');
-    }
-  }
-
+  console.log('[Electron] Starting in-process backend server (server/index.js)...');
   try {
-    backendProcess = spawn(process.execPath, [serverScript], {
-      cwd: execCwd,
-      env: { ...process.env, PORT: '5001', ELECTRON_RUN_AS_NODE: '1' },
-      stdio: 'inherit',
-    });
-
-    backendProcess.on('error', (err) => {
-      console.error('[Electron] Failed to spawn backend process:', err);
-    });
-
-    backendProcess.on('exit', (code, signal) => {
-      console.log(`[Electron] Backend process exited with code ${code} / signal ${signal}`);
-      backendProcess = null;
-    });
-  } catch (err) {
-    console.warn('[Electron] Backend spawn failed, attempting in-process import:', err);
+    await import('../server/index.js');
+    console.log('[Electron] In-process server imported successfully');
+  } catch (importErr) {
+    console.error('[Electron] In-process import failed, attempting child process spawn:', importErr);
     try {
-      await import('../server/index.js');
-      return true;
-    } catch (importErr) {
-      console.error('[Electron] In-process fallback error:', importErr);
+      const serverScript = path.join(projectRoot, 'server', 'index.js');
+      backendProcess = spawn(process.execPath, [serverScript], {
+        cwd: projectRoot,
+        env: {
+          ...process.env,
+          PORT: '5001',
+          ELECTRON_RUN_AS_NODE: '1',
+          NODE_PATH: path.join(projectRoot, 'node_modules'),
+        },
+        stdio: 'inherit',
+      });
+      backendProcess.on('exit', (code, signal) => {
+        console.log(`[Electron] Backend process exited with code ${code} / signal ${signal}`);
+        backendProcess = null;
+      });
+    } catch (spawnErr) {
+      console.error('[Electron] Spawn fallback failed:', spawnErr);
     }
   }
 

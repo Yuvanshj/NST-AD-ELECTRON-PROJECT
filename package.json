@@ -70,10 +70,7 @@
       "assets/**/*",
       "package.json"
     ],
-    "asar": true,
-    "asarUnpack": [
-      "server/**/*"
-    ],
+    "asar": false,
     "mac": {
       "category": "public.app-category.education",
       "target": [
